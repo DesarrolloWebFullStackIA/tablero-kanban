@@ -6,7 +6,7 @@
 import api from './api.js';
 import store from './store.js';
 import { renderBoard, updateMetricsUI, updateColumnState, isTaskOverdue, formatDate, updateCardCommentsCount } from './ui.js';
-import { showToast } from './utils.js';
+import { showToast, debounce } from './utils.js';
 import { initCreateTaskModal, initTaskDeletion, initTaskDetailModal } from './modal.js';
 import { initDragAndDrop } from './dragdrop.js';
 
@@ -117,6 +117,11 @@ function initFilters() {
   const prioritySelect = document.getElementById('filter-priority');
   const resetFiltersBtn = document.getElementById('btn-reset-filters');
 
+  // Debounced real-time search update to avoid UI re-render bottleneck on fast typing
+  const debouncedSetSearch = debounce((query) => {
+    store.setSearchQuery(query);
+  }, 200);
+
   if (searchInput) {
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value;
@@ -127,7 +132,16 @@ function initFilters() {
           clearSearchBtn.setAttribute('hidden', '');
         }
       }
-      store.setSearchQuery(query);
+      debouncedSetSearch(query);
+    });
+
+    // Keyboard accessibility: Escape clears the search input
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && searchInput.value) {
+        searchInput.value = '';
+        if (clearSearchBtn) clearSearchBtn.setAttribute('hidden', '');
+        store.setSearchQuery('');
+      }
     });
   }
 
