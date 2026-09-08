@@ -774,6 +774,16 @@ a {
   transition: all var(--transition-fast);
 }
 
+/* Hide browser default search cancel button to avoid duplicate 'x' buttons */
+.search-input::-webkit-search-cancel-button,
+.search-input::-webkit-search-decoration,
+.search-input::-webkit-search-results-button,
+.search-input::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
 .search-input::placeholder {
   color: var(--color-text-subtle);
 }
@@ -885,21 +895,26 @@ a {
   .toolbar {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-sm);
+    justify-content: flex-start;
+    gap: var(--space-xs);
     padding: var(--space-sm);
   }
 
   .search-box {
+    flex: 0 0 auto;
+    width: 100%;
     max-width: 100%;
   }
 
   .filter-controls {
     justify-content: space-between;
     width: 100%;
+    gap: var(--space-xs);
   }
 
   .filter-group {
     flex: 1;
+    min-width: 0;
   }
 
   .select-wrapper {
@@ -908,6 +923,7 @@ a {
 
   .form-select {
     width: 100%;
+    font-size: var(--font-size-xs);
   }
 }
 

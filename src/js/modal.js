@@ -960,7 +960,7 @@ export function renderUsersList() {
       (u) => `
     <div class="user-card-item" data-user-id="${escapeHtml(String(u.id))}">
       <img
-        src="${escapeHtml(u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name || 'User')}`)}"
+        src="${escapeHtml(u.avatar || `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(u.name || 'User')}`)}"
         alt="${escapeHtml(u.name)}"
         class="user-card-avatar"
       />
