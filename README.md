@@ -1,8 +1,9 @@
 # Tablero Kanban | Trello-style Project & Task Manager
 
-[![Semantic Versioning](https://img.shields.io/badge/version-v10.0.1-blue.svg)](https://semver.org)
+[![Semantic Versioning](https://img.shields.io/badge/version-v10.1.0-blue.svg)](https://semver.org)
 [![Vitest Unit Tests](https://img.shields.io/badge/vitest-79%2F79%20passing-brightgreen.svg)](https://vitest.dev)
 [![Live Demo](https://img.shields.io/badge/demo-GitHub%20Pages-success.svg)](https://desarrollowebfullstackia.github.io/tablero-kanban/)
+[![GitHub Wiki](https://img.shields.io/badge/wiki-GitHub%20Wiki-blueviolet.svg)](https://github.com/DesarrolloWebFullStackIA/tablero-kanban/wiki)
 [![JavaScript](https://img.shields.io/badge/javascript-ES6%2B%20Modules-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![CSS3](https://img.shields.io/badge/styling-CSS3%20BEM-1572B6.svg)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellowgreen.svg)](https://conventionalcommits.org)
@@ -78,12 +79,13 @@ tablero-kanban/
 │   ├── store.test.js              # Unit tests for state store, filtering, and metrics
 │   └── utils.test.js              # Unit tests for date formatters, overdue logic, and debounce
 ├── tablero_kanban_docs/           # Comprehensive English documentation vault
-│   ├── 01-architecture-overview.md
-│   ├── 02-data-contracts-and-api.md
-│   ├── 03-component-design-system.md
-│   ├── 04-accessibility-and-quality.md
+│   ├── 01-Project-Overview.md
+│   ├── 02-Architecture-and-Design.md
+│   ├── 03-Data-Model-and-API.md
+│   ├── 04-UI-UX-Design-System.md
 │   ├── 05-Task-Roadmap.md
-│   └── 06-GitFlow-and-Versioning.md
+│   ├── 06-GitFlow-and-Versioning.md
+│   └── 07-UI-UX-Stitch-Prompt-and-Prototypes.md
 ├── index.html                     # Semantic HTML5 single-page application entry point
 ├── package.json                   # Project scripts, metadata, and dependencies
 └── README.md                      # Project documentation
