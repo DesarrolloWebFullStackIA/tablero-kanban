@@ -5,9 +5,9 @@
 
 import api from './api.js';
 import store from './store.js';
-import { renderBoard, updateMetricsUI, updateColumnState, isTaskOverdue, formatDate } from './ui.js';
+import { renderBoard, updateMetricsUI, updateColumnState, isTaskOverdue, formatDate, updateCardCommentsCount } from './ui.js';
 import { showToast } from './utils.js';
-import { initCreateTaskModal, initTaskDeletion } from './modal.js';
+import { initCreateTaskModal, initTaskDeletion, initTaskDetailModal } from './modal.js';
 import { initDragAndDrop } from './dragdrop.js';
 
 /**
@@ -173,6 +173,7 @@ export async function initApp() {
   initFilters();
   initCreateTaskModal();
   initTaskDeletion();
+  initTaskDetailModal();
 
   // Initialize Drag and Drop between columns with optimistic UI & rollback
   initDragAndDrop(async (payload) => {
@@ -238,6 +239,27 @@ export async function initApp() {
             : 'Fecha de entrega: ' + formatDate(payload.task.dueDate);
         }
       }
+      return;
+    }
+
+    if (event === 'COMMENTS_LOADED' && payload) {
+      updateCardCommentsCount(payload.taskId, payload.comments?.length ?? 0);
+      return;
+    }
+
+    if (event === 'COMMENT_ADDED' && payload) {
+      const count = store.getCommentsForTask(payload.taskId).length;
+      updateCardCommentsCount(payload.taskId, count);
+      return;
+    }
+
+    if (event === 'COMMENT_REMOVED' && payload) {
+      const count = store.getCommentsForTask(payload.taskId).length;
+      updateCardCommentsCount(payload.taskId, count);
+      return;
+    }
+
+    if (event === 'ACTIVE_TASK_CHANGED') {
       return;
     }
 
