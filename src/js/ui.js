@@ -1,7 +1,4 @@
-/**
- * Tablero Kanban - Dynamic UI Rendering & DOM Management
- * Handles rendering of cards, columns, empty states, and metrics dashboard
- */
+import { getTagColorIndex } from './utils.js';
 
 /**
  * Escapes HTML entities to prevent XSS vulnerabilities
@@ -100,6 +97,18 @@ export function createCardElement(task, commentsCount = 0) {
     ? `<p class="card-desc">${escapeHtml(task.description)}</p>`
     : '';
 
+  const tagsHtml =
+    Array.isArray(task.tags) && task.tags.length > 0
+      ? `<div class="card-tags">
+          ${task.tags
+            .map((tag) => {
+              const colorIdx = getTagColorIndex(tag, 6);
+              return `<button type="button" class="tag-chip tag-chip--color-${colorIdx}" data-tag="${escapeHtml(tag)}" title="Filtrar por ${escapeHtml(tag)}">${escapeHtml(tag)}</button>`;
+            })
+            .join('')}
+        </div>`
+      : '';
+
   const commentsBadgeHtml = commentsCount > 0
     ? `<span class="card-comments-badge" title="${commentsCount} comentario${commentsCount > 1 ? 's' : ''}">
         ${commentsIcon}
@@ -123,6 +132,7 @@ export function createCardElement(task, commentsCount = 0) {
 
     <h3 class="card-title">${escapeHtml(task.title)}</h3>
     ${descHtml}
+    ${tagsHtml}
 
     <footer class="card-footer">
       <span

@@ -97,3 +97,52 @@ export function debounce(func, delay = 250) {
   };
 }
 
+/**
+ * Parses raw text into an array of sanitized, hashtag-prefixed tags
+ * @param {string|string[]} raw - Comma or whitespace separated tags, or array
+ * @returns {string[]} Normalized unique hashtags (e.g. ['#frontend', '#diseño'])
+ */
+export function parseTags(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) {
+    return Array.from(
+      new Set(
+        raw
+          .map((t) => String(t).trim().toLowerCase())
+          .filter((t) => t.length > 0)
+          .map((t) => (t.startsWith('#') ? t : `#${t}`))
+      )
+    );
+  }
+  if (typeof raw !== 'string') return [];
+
+  const tokens = raw.split(/[,\s]+/);
+  return Array.from(
+    new Set(
+      tokens
+        .map((t) => t.trim().toLowerCase())
+        .filter((t) => t.length > 0)
+        .map((t) => (t.startsWith('#') ? t : `#${t}`))
+    )
+  );
+}
+
+/**
+ * Generates a deterministic color palette index for a tag string
+ * @param {string} tag
+ * @param {number} [maxColors=6]
+ * @returns {number}
+ */
+export function getTagColorIndex(tag, maxColors = 6) {
+  if (!tag) return 0;
+  let hash = 0;
+  const str = String(tag);
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return Math.abs(hash) % maxColors;
+}
+
+
+

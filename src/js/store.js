@@ -25,10 +25,11 @@ class Store {
     /** @type {Map<string, Array<object>>} */
     this.commentsMap = new Map();
 
-    /** @type {{ query: string, priority: string }} */
+    /** @type {{ query: string, priority: string, tag: string }} */
     this.filters = {
       query: '',
       priority: 'all',
+      tag: 'all',
     };
 
     /** @type {string|number|null} */
@@ -188,16 +189,42 @@ class Store {
   }
 
   /**
+   * Set tag filter ('all' | '#tag')
+   * @param {string} tag
+   */
+  setTagFilter(tag) {
+    this.filters.tag = (tag || 'all').trim();
+    this.notify('FILTER_CHANGED', this.filters);
+  }
+
+  /**
    * Reset all filters to default
    */
   resetFilters() {
     this.filters.query = '';
     this.filters.priority = 'all';
+    this.filters.tag = 'all';
     this.notify('FILTER_CHANGED', this.filters);
   }
 
   /**
-   * Get tasks filtered by current search text and priority
+   * Get all unique hashtags across all stored tasks sorted alphabetically
+   * @returns {string[]}
+   */
+  getAllTags() {
+    const tagSet = new Set();
+    for (const task of this.tasks) {
+      if (Array.isArray(task.tags)) {
+        for (const tag of task.tags) {
+          if (tag) tagSet.add(tag);
+        }
+      }
+    }
+    return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
+  }
+
+  /**
+   * Get tasks filtered by current search text, priority, and tag
    * @returns {Task[]} Filtered task list
    */
   getFilteredTasks() {
@@ -207,11 +234,21 @@ class Store {
         return false;
       }
 
-      // 2. Search query match in title or description
+      // 2. Tag filter match
+      if (this.filters.tag !== 'all') {
+        if (!Array.isArray(task.tags) || !task.tags.includes(this.filters.tag)) {
+          return false;
+        }
+      }
+
+      // 3. Search query match in title, description, or tags
       if (this.filters.query) {
         const titleMatch = (task.title || '').toLowerCase().includes(this.filters.query);
         const descMatch = (task.description || '').toLowerCase().includes(this.filters.query);
-        if (!titleMatch && !descMatch) {
+        const tagMatch =
+          Array.isArray(task.tags) &&
+          task.tags.some((t) => t.toLowerCase().includes(this.filters.query));
+        if (!titleMatch && !descMatch && !tagMatch) {
           return false;
         }
       }

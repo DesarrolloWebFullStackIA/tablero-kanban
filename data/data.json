@@ -7,7 +7,8 @@
       "priority": "Alta",
       "dueDate": "2026-09-15",
       "status": "todo",
-      "createdAt": "2026-09-08T09:00:00Z"
+      "createdAt": "2026-09-08T09:00:00Z",
+      "tags": ["#diseño", "#figma", "#ux"]
     },
     {
       "id": "2",
@@ -16,7 +17,8 @@
       "priority": "Media",
       "dueDate": "2026-09-10",
       "status": "doing",
-      "createdAt": "2026-09-08T09:30:00Z"
+      "createdAt": "2026-09-08T09:30:00Z",
+      "tags": ["#backend", "#api"]
     },
     {
       "id": "3",
@@ -25,7 +27,8 @@
       "priority": "Baja",
       "dueDate": "2026-09-12",
       "status": "done",
-      "createdAt": "2026-09-08T10:00:00Z"
+      "createdAt": "2026-09-08T10:00:00Z",
+      "tags": ["#html", "#frontend"]
     },
     {
       "id": "4",
@@ -34,7 +37,8 @@
       "priority": "Alta",
       "dueDate": "2026-09-05",
       "status": "todo",
-      "createdAt": "2026-09-08T10:15:00Z"
+      "createdAt": "2026-09-08T10:15:00Z",
+      "tags": ["#accesibilidad", "#wcag"]
     }
   ],
   "comments": [

@@ -115,13 +115,15 @@ function initFilters() {
   const searchInput = document.getElementById('search-input');
   const clearSearchBtn = document.getElementById('btn-clear-search');
   const prioritySelect = document.getElementById('filter-priority');
+  const tagSelect = document.getElementById('filter-tag');
   const resetFiltersBtn = document.getElementById('btn-reset-filters');
 
   // Update reset button visual active state
   const updateResetButtonState = () => {
     const hasActiveFilters = Boolean(
       (searchInput && searchInput.value.trim().length > 0) ||
-      (prioritySelect && prioritySelect.value !== 'all')
+      (prioritySelect && prioritySelect.value !== 'all') ||
+      (tagSelect && tagSelect.value !== 'all')
     );
     if (resetFiltersBtn) {
       resetFiltersBtn.classList.toggle('btn-reset--active', hasActiveFilters);
@@ -177,6 +179,26 @@ function initFilters() {
     });
   }
 
+  if (tagSelect) {
+    tagSelect.addEventListener('change', (e) => {
+      updateResetButtonState();
+      store.setTagFilter(e.target.value);
+    });
+  }
+
+  // Clicking a tag chip on a card filters the board by that tag
+  document.addEventListener('click', (e) => {
+    const tagChip = e.target.closest('.tag-chip');
+    if (tagChip && tagChip.dataset.tag) {
+      const tag = tagChip.dataset.tag;
+      if (tagSelect) {
+        tagSelect.value = tag;
+      }
+      store.setTagFilter(tag);
+      updateResetButtonState();
+    }
+  });
+
   if (resetFiltersBtn) {
     resetFiltersBtn.addEventListener('click', () => {
       if (searchInput) {
@@ -188,9 +210,39 @@ function initFilters() {
       if (prioritySelect) {
         prioritySelect.value = 'all';
       }
+      if (tagSelect) {
+        tagSelect.value = 'all';
+      }
       updateResetButtonState();
       store.resetFilters();
     });
+  }
+}
+
+/**
+ * Populates and refreshes the tag filter select options based on store tags
+ */
+export function updateTagFilterOptions() {
+  const tagSelect = document.getElementById('filter-tag');
+  if (!tagSelect) return;
+
+  const currentTag = store.filters.tag || 'all';
+  const tags = store.getAllTags();
+
+  tagSelect.innerHTML = '<option value="all">Todas las etiquetas</option>';
+  tags.forEach((tag) => {
+    const option = document.createElement('option');
+    option.value = tag;
+    option.textContent = tag;
+    if (tag === currentTag) {
+      option.selected = true;
+    }
+    tagSelect.appendChild(option);
+  });
+
+  if (currentTag !== 'all' && !tags.includes(currentTag)) {
+    store.setTagFilter('all');
+    tagSelect.value = 'all';
   }
 }
 
@@ -291,6 +343,15 @@ export async function initApp() {
 
     if (event === 'ACTIVE_TASK_CHANGED') {
       return;
+    }
+
+    if (
+      event === 'TASKS_LOADED' ||
+      event === 'TASK_ADDED' ||
+      event === 'TASK_UPDATED' ||
+      event === 'TASK_REMOVED'
+    ) {
+      updateTagFilterOptions();
     }
 
     const filteredTasks = store.getFilteredTasks();

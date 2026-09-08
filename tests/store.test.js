@@ -10,6 +10,7 @@ describe('Central State Store (store.js)', () => {
       priority: 'Alta',
       dueDate: '2026-09-15',
       status: 'todo',
+      tags: ['#diseño', '#figma'],
     },
     {
       id: '2',
@@ -18,6 +19,7 @@ describe('Central State Store (store.js)', () => {
       priority: 'Media',
       dueDate: '2026-09-10',
       status: 'doing',
+      tags: ['#backend', '#api'],
     },
     {
       id: '3',
@@ -26,6 +28,7 @@ describe('Central State Store (store.js)', () => {
       priority: 'Baja',
       dueDate: '2026-09-12',
       status: 'done',
+      tags: ['#frontend'],
     },
   ];
 
@@ -121,21 +124,39 @@ describe('Central State Store (store.js)', () => {
       expect(filtered[0].id).toBe('3');
     });
 
-    it('should combine search query and priority filter', () => {
-      store.setSearchQuery('HTML');
-      store.setPriorityFilter('Baja');
+    it('should filter tasks by tag', () => {
+      store.setTagFilter('#backend');
+      const filtered = store.getFilteredTasks();
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0].id).toBe('2');
+
+      store.setTagFilter('#inexistente');
+      expect(store.getFilteredTasks()).toHaveLength(0);
+    });
+
+    it('should return all unique hashtags sorted across all tasks', () => {
+      const allTags = store.getAllTags();
+      expect(allTags).toEqual(['#api', '#backend', '#diseño', '#figma', '#frontend']);
+    });
+
+    it('should combine search query, priority filter, and tag filter', () => {
+      store.setSearchQuery('figma');
+      store.setPriorityFilter('Alta');
+      store.setTagFilter('#diseño');
       expect(store.getFilteredTasks()).toHaveLength(1);
 
-      store.setPriorityFilter('Alta');
+      store.setTagFilter('#backend');
       expect(store.getFilteredTasks()).toHaveLength(0);
     });
 
     it('should reset filters to show all tasks', () => {
       store.setSearchQuery('json');
       store.setPriorityFilter('Media');
+      store.setTagFilter('#backend');
       expect(store.getFilteredTasks()).toHaveLength(1);
 
       store.resetFilters();
+      expect(store.filters.tag).toBe('all');
       expect(store.getFilteredTasks()).toHaveLength(3);
     });
   });

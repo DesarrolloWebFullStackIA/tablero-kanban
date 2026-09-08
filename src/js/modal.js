@@ -5,7 +5,7 @@
 
 import api from './api.js';
 import store from './store.js';
-import { showToast } from './utils.js';
+import { showToast, parseTags, getTagColorIndex } from './utils.js';
 import { formatDate, isTaskOverdue, renderComments } from './ui.js';
 
 /**
@@ -25,6 +25,7 @@ export function initCreateTaskModal() {
   const descInput = document.getElementById('create-task-desc');
   const prioritySelect = document.getElementById('create-task-priority');
   const dueDateInput = document.getElementById('create-task-due-date');
+  const tagsInput = document.getElementById('create-task-tags');
   const statusInput = document.getElementById('create-task-status');
 
   // Error validation containers
@@ -51,6 +52,9 @@ export function initCreateTaskModal() {
     }
     if (prioritySelect) {
       prioritySelect.value = 'Media';
+    }
+    if (tagsInput) {
+      tagsInput.value = '';
     }
 
     dialog.showModal();
@@ -127,6 +131,7 @@ export function initCreateTaskModal() {
     const priority = prioritySelect?.value || 'Media';
     const dueDate = dueDateInput?.value || '';
     const status = statusInput?.value || 'todo';
+    const tags = parseTags(tagsInput?.value || '');
 
     let isValid = true;
 
@@ -160,6 +165,7 @@ export function initCreateTaskModal() {
         priority,
         dueDate,
         status,
+        tags,
       });
 
       store.addTask(newTask);
@@ -300,10 +306,26 @@ export async function openTaskDetailModal(taskId) {
   const idInput = document.getElementById('detail-task-id');
   const titleInput = document.getElementById('detail-task-title-input');
   const descInput = document.getElementById('detail-task-desc-input');
+  const tagsInput = document.getElementById('detail-task-tags-input');
+  const tagsChips = document.getElementById('detail-tags-chips');
 
   if (idInput) idInput.value = String(task.id);
   if (titleInput) titleInput.value = task.title || '';
   if (descInput) descInput.value = task.description || '';
+  if (tagsInput) tagsInput.value = (task.tags || []).join(' ');
+
+  if (tagsChips) {
+    if (task.tags && task.tags.length > 0) {
+      tagsChips.innerHTML = task.tags
+        .map((t) => {
+          const idx = getTagColorIndex(t, 6);
+          return `<span class="tag-chip tag-chip--color-${idx}">${t}</span>`;
+        })
+        .join('');
+    } else {
+      tagsChips.innerHTML = '<span class="detail-tags-empty">Sin etiquetas</span>';
+    }
+  }
 
   // Reset add comment form
   const addCommentForm = document.getElementById('form-add-comment');
@@ -379,8 +401,8 @@ export function initTaskDetailModal() {
   const boardContainer = document.getElementById('board-container');
   if (boardContainer) {
     boardContainer.addEventListener('click', (e) => {
-      // Ignore click on quick delete button
-      if (e.target.closest('.btn-card-delete')) return;
+      // Ignore click on quick delete button or tag chip
+      if (e.target.closest('.btn-card-delete') || e.target.closest('.tag-chip')) return;
 
       const card = e.target.closest('.kanban-card');
       if (card && card.dataset.id) {
@@ -391,7 +413,7 @@ export function initTaskDetailModal() {
     // Keyboard accessibility: Enter or Space on focused card
     boardContainer.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
-        if (e.target.closest('.btn-card-delete')) return;
+        if (e.target.closest('.btn-card-delete') || e.target.closest('.tag-chip')) return;
         const card = e.target.closest('.kanban-card');
         if (card && card.dataset.id) {
           e.preventDefault();
@@ -406,6 +428,8 @@ export function initTaskDetailModal() {
   const idInput = document.getElementById('detail-task-id');
   const titleInput = document.getElementById('detail-task-title-input');
   const descInput = document.getElementById('detail-task-desc-input');
+  const tagsInput = document.getElementById('detail-task-tags-input');
+  const tagsChips = document.getElementById('detail-tags-chips');
   const saveBtn = document.getElementById('btn-save-task-edits');
 
   if (editForm) {
@@ -417,6 +441,7 @@ export function initTaskDetailModal() {
 
       const newTitle = (titleInput?.value || '').trim();
       const newDesc = (descInput?.value || '').trim();
+      const newTags = parseTags(tagsInput?.value || '');
 
       if (!newTitle || newTitle.length < 3) {
         showToast('El título debe tener al menos 3 caracteres.', 'error');
@@ -433,13 +458,29 @@ export function initTaskDetailModal() {
         const updatedTask = await api.updateTask(taskId, {
           title: newTitle,
           description: newDesc,
+          tags: newTags,
         });
 
         // Update central reactive store
         store.updateTask(taskId, {
           title: updatedTask.title || newTitle,
           description: updatedTask.description ?? newDesc,
+          tags: updatedTask.tags || newTags,
         });
+
+        // Update tags preview chips in dialog
+        if (tagsChips) {
+          if (newTags.length > 0) {
+            tagsChips.innerHTML = newTags
+              .map((t) => {
+                const idx = getTagColorIndex(t, 6);
+                return `<span class="tag-chip tag-chip--color-${idx}">${t}</span>`;
+              })
+              .join('');
+          } else {
+            tagsChips.innerHTML = '<span class="detail-tags-empty">Sin etiquetas</span>';
+          }
+        }
 
         showToast('Cambios guardados correctamente', 'success');
       } catch (err) {

@@ -35,6 +35,14 @@
   --color-priority-low-bg: #ecfdf5;
   --color-priority-low-border: #a7f3d0;
 
+  /* Tag Color Palette (Light) */
+  --tag-0-bg: #e0e7ff; --tag-0-text: #4338ca; --tag-0-border: #c7d2fe;
+  --tag-1-bg: #d1fae5; --tag-1-text: #065f46; --tag-1-border: #a7f3d0;
+  --tag-2-bg: #fef3c7; --tag-2-text: #92400e; --tag-2-border: #fde68a;
+  --tag-3-bg: #fce7f3; --tag-3-text: #9d174d; --tag-3-border: #fbcfe8;
+  --tag-4-bg: #e0f2fe; --tag-4-text: #0369a1; --tag-4-border: #bae6fd;
+  --tag-5-bg: #f3e8ff; --tag-5-text: #6b21a8; --tag-5-border: #e9d5ff;
+
   /* Column Status Accents */
   --color-col-todo: #64748b;
   --color-col-doing: #3b82f6;
@@ -159,6 +167,14 @@
   --color-priority-low-bg: rgba(16, 185, 129, 0.15);
   --color-priority-low-border: rgba(16, 185, 129, 0.3);
 
+  /* Tag Color Palette (Dark) */
+  --tag-0-bg: rgba(99, 102, 241, 0.2); --tag-0-text: #a5b4fc; --tag-0-border: rgba(99, 102, 241, 0.35);
+  --tag-1-bg: rgba(16, 185, 129, 0.2); --tag-1-text: #6ee7b7; --tag-1-border: rgba(16, 185, 129, 0.35);
+  --tag-2-bg: rgba(245, 158, 11, 0.2); --tag-2-text: #fcd34d; --tag-2-border: rgba(245, 158, 11, 0.35);
+  --tag-3-bg: rgba(236, 72, 153, 0.2); --tag-3-text: #f9a8d4; --tag-3-border: rgba(236, 72, 153, 0.35);
+  --tag-4-bg: rgba(14, 165, 233, 0.2); --tag-4-text: #7dd3fc; --tag-4-border: rgba(14, 165, 233, 0.35);
+  --tag-5-bg: rgba(168, 85, 247, 0.2); --tag-5-text: #d8b4fe; --tag-5-border: rgba(168, 85, 247, 0.35);
+
   --color-dialog-backdrop: rgba(0, 0, 0, 0.8);
   --color-drawer-backdrop: rgba(0, 0, 0, 0.7);
 
@@ -186,6 +202,13 @@
     --color-border: #334155;
     --color-border-hover: #475569;
     --color-border-active: #60a5fa;
+
+    --tag-0-bg: rgba(99, 102, 241, 0.2); --tag-0-text: #a5b4fc; --tag-0-border: rgba(99, 102, 241, 0.35);
+    --tag-1-bg: rgba(16, 185, 129, 0.2); --tag-1-text: #6ee7b7; --tag-1-border: rgba(16, 185, 129, 0.35);
+    --tag-2-bg: rgba(245, 158, 11, 0.2); --tag-2-text: #fcd34d; --tag-2-border: rgba(245, 158, 11, 0.35);
+    --tag-3-bg: rgba(236, 72, 153, 0.2); --tag-3-text: #f9a8d4; --tag-3-border: rgba(236, 72, 153, 0.35);
+    --tag-4-bg: rgba(14, 165, 233, 0.2); --tag-4-text: #7dd3fc; --tag-4-border: rgba(14, 165, 233, 0.35);
+    --tag-5-bg: rgba(168, 85, 247, 0.2); --tag-5-text: #d8b4fe; --tag-5-border: rgba(168, 85, 247, 0.35);
 
     --color-dialog-backdrop: rgba(0, 0, 0, 0.8);
     --color-drawer-backdrop: rgba(0, 0, 0, 0.7);
@@ -1179,6 +1202,100 @@ a {
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Card Hashtag Tags */
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* Tag Chip Base */
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: var(--font-weight-medium);
+  font-family: var(--font-family-mono);
+  border-radius: var(--radius-xs);
+  line-height: 1.35;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform var(--transition-fast), filter var(--transition-fast), box-shadow var(--transition-fast);
+  text-decoration: none;
+  background: none;
+}
+
+.tag-chip:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.92);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.tag-chip:active {
+  transform: translateY(0);
+}
+
+/* Tag Chip Color Variations */
+.tag-chip--color-0 {
+  background-color: var(--tag-0-bg);
+  color: var(--tag-0-text);
+  border-color: var(--tag-0-border);
+}
+
+.tag-chip--color-1 {
+  background-color: var(--tag-1-bg);
+  color: var(--tag-1-text);
+  border-color: var(--tag-1-border);
+}
+
+.tag-chip--color-2 {
+  background-color: var(--tag-2-bg);
+  color: var(--tag-2-text);
+  border-color: var(--tag-2-border);
+}
+
+.tag-chip--color-3 {
+  background-color: var(--tag-3-bg);
+  color: var(--tag-3-text);
+  border-color: var(--tag-3-border);
+}
+
+.tag-chip--color-4 {
+  background-color: var(--tag-4-bg);
+  color: var(--tag-4-text);
+  border-color: var(--tag-4-border);
+}
+
+.tag-chip--color-5 {
+  background-color: var(--tag-5-bg);
+  color: var(--tag-5-text);
+  border-color: var(--tag-5-border);
+}
+
+/* Detail Modal Tags Preview */
+.detail-tags-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  min-height: 24px;
+}
+
+.detail-tags-empty {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-subtle);
+  font-style: italic;
+}
+
+.form-hint {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: 4px;
 }
 
 /* Card Footer (Due Date & Comments Count) */

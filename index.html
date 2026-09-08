@@ -199,6 +199,15 @@
             </div>
           </div>
 
+          <div class="filter-group">
+            <label for="filter-tag" class="filter-label">Etiqueta:</label>
+            <div class="select-wrapper">
+              <select id="filter-tag" class="form-select filter-select" aria-label="Filtrar por etiqueta">
+                <option value="all">Todas</option>
+              </select>
+            </div>
+          </div>
+
           <button
             type="button"
             id="btn-reset-filters"
@@ -417,6 +426,19 @@
             </div>
           </div>
 
+          <div class="form-field">
+            <label for="create-task-tags" class="form-label">Etiquetas (#tags)</label>
+            <input
+              type="text"
+              id="create-task-tags"
+              name="tags"
+              class="form-input"
+              placeholder="Ej. #diseño #frontend #api"
+              autocomplete="off"
+            />
+            <span class="form-hint">Separa las etiquetas con espacios o comas.</span>
+          </div>
+
           <input type="hidden" id="create-task-status" name="status" value="todo" />
 
           <footer class="dialog-footer">
@@ -482,6 +504,19 @@
                 rows="4"
                 placeholder="Añadir una descripción más detallada..."
               ></textarea>
+            </div>
+
+            <div class="form-field">
+              <label for="detail-task-tags-input" class="form-label">Etiquetas (#tags)</label>
+              <input
+                type="text"
+                id="detail-task-tags-input"
+                name="tags"
+                class="form-input"
+                placeholder="Ej. #diseño #frontend #api"
+                autocomplete="off"
+              />
+              <div class="detail-tags-chips" id="detail-tags-chips" aria-label="Etiquetas asignadas"></div>
             </div>
 
             <div class="detail-actions-bar">
