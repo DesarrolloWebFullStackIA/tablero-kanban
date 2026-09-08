@@ -12,6 +12,13 @@ const INITIAL_TASKS = [
     priority: "Alta",
     dueDate: "2026-09-15",
     status: "todo",
+    tags: ["#diseño", "#figma", "#ux"],
+    assigneeId: "u3",
+    checklist: [
+      { id: "c1", text: "Wireframes en baja fidelidad", completed: true },
+      { id: "c2", text: "Prototipo interactivo en Stitch", completed: false },
+      { id: "c3", text: "Exportar assets a CSS", completed: false }
+    ],
     createdAt: "2026-09-08T09:00:00Z"
   },
   {
@@ -21,6 +28,12 @@ const INITIAL_TASKS = [
     priority: "Media",
     dueDate: "2026-09-10",
     status: "doing",
+    tags: ["#backend", "#api", "#mock"],
+    assigneeId: "u2",
+    checklist: [
+      { id: "c4", text: "Crear db.json con datos iniciales", completed: true },
+      { id: "c5", text: "Configurar script server en package.json", completed: true }
+    ],
     createdAt: "2026-09-08T09:30:00Z"
   },
   {
@@ -30,6 +43,12 @@ const INITIAL_TASKS = [
     priority: "Baja",
     dueDate: "2026-09-12",
     status: "done",
+    tags: ["#html5", "#semantica", "#a11y"],
+    assigneeId: "u1",
+    checklist: [
+      { id: "c6", text: "Estructurar elementos <main>, <header>, <section>", completed: true },
+      { id: "c7", text: "Agregar atributos ARIA", completed: true }
+    ],
     createdAt: "2026-09-08T10:00:00Z"
   },
   {
@@ -39,6 +58,12 @@ const INITIAL_TASKS = [
     priority: "Alta",
     dueDate: "2026-09-05",
     status: "todo",
+    tags: ["#a11y", "#wcag", "#calidad"],
+    assigneeId: "u1",
+    checklist: [
+      { id: "c8", text: "Comprobar contraste en modo claro y oscuro", completed: false },
+      { id: "c9", text: "Navegación completa por teclado (Tab/Enter/Espacio)", completed: false }
+    ],
     createdAt: "2026-09-08T10:15:00Z"
   }
 ];
@@ -67,9 +92,34 @@ const INITIAL_COMMENTS = [
   }
 ];
 
+const INITIAL_USERS = [
+  {
+    id: "u1",
+    name: "Ana García",
+    email: "ana@example.com",
+    role: "Frontend Lead",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana%20Garc%C3%ADa"
+  },
+  {
+    id: "u2",
+    name: "Carlos Ruiz",
+    email: "carlos@example.com",
+    role: "Backend Dev",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos%20Ruiz"
+  },
+  {
+    id: "u3",
+    name: "Elena Gómez",
+    email: "elena@example.com",
+    role: "UI/UX Designer",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena%20G%C3%B3mez"
+  }
+];
+
 // In-memory data collections for live session
 let inMemoryTasks = JSON.parse(JSON.stringify(INITIAL_TASKS));
 let inMemoryComments = JSON.parse(JSON.stringify(INITIAL_COMMENTS));
+let inMemoryUsers = JSON.parse(JSON.stringify(INITIAL_USERS));
 
 export const BASE_URL = 'https://desarrollowebfullstackia.github.io/tablero-kanban';
 
@@ -214,6 +264,35 @@ export async function deleteComment(id) {
   return deleted;
 }
 
+// --------------------------------------------------------------------------
+// Users API Endpoints (In-Memory Mock)
+// --------------------------------------------------------------------------
+
+/**
+ * Fetch all registered users
+ * @returns {Promise<Array<object>>}
+ */
+export async function getUsers() {
+  return JSON.parse(JSON.stringify(inMemoryUsers));
+}
+
+/**
+ * Create a new user (POST /users)
+ * @param {object} userData - User payload (name, email, role, avatar)
+ * @returns {Promise<object>} Created user
+ */
+export async function createUser(userData) {
+  const newUser = {
+    ...userData,
+    id: `u_${Date.now()}`,
+    avatar:
+      userData.avatar ||
+      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userData.name || 'User')}`,
+  };
+  inMemoryUsers.push(newUser);
+  return JSON.parse(JSON.stringify(newUser));
+}
+
 export default {
   BASE_URL,
   ApiError,
@@ -226,4 +305,6 @@ export default {
   getCommentsByTaskId,
   createComment,
   deleteComment,
+  getUsers,
+  createUser,
 };

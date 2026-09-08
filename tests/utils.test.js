@@ -94,3 +94,32 @@ describe('Async & Debounce Utility', () => {
   });
 });
 
+describe('Tag Parsing & Palette Utilities', () => {
+  it('should parse space-separated and comma-separated tags into normalized hashtags', async () => {
+    const { parseTags } = await import('../src/js/utils.js');
+    expect(parseTags('frontend, backend #api')).toEqual(['#frontend', '#backend', '#api']);
+    expect(parseTags('   #UX   ui    ')).toEqual(['#ux', '#ui']);
+  });
+
+  it('should handle array inputs and deduplicate tags', async () => {
+    const { parseTags } = await import('../src/js/utils.js');
+    expect(parseTags(['design', '#design', 'FIGMA'])).toEqual(['#design', '#figma']);
+  });
+
+  it('should return empty array for empty or non-string inputs', async () => {
+    const { parseTags } = await import('../src/js/utils.js');
+    expect(parseTags('')).toEqual([]);
+    expect(parseTags(null)).toEqual([]);
+    expect(parseTags(undefined)).toEqual([]);
+  });
+
+  it('should return a deterministic integer color index within range', async () => {
+    const { getTagColorIndex } = await import('../src/js/utils.js');
+    const idx1 = getTagColorIndex('#frontend', 6);
+    const idx2 = getTagColorIndex('#frontend', 6);
+    expect(idx1).toBe(idx2);
+    expect(idx1).toBeGreaterThanOrEqual(0);
+    expect(idx1).toBeLessThan(6);
+  });
+});
+
