@@ -49,7 +49,7 @@
           </div>
         </section>
 
-        <!-- Header Actions: Theme toggle & Add Task button -->
+        <!-- Header Actions: Theme toggle, Add Task & Hamburger Menu -->
         <div class="header-actions">
           <button
             type="button"
@@ -86,9 +86,70 @@
             </svg>
             <span>Nueva Tarea</span>
           </button>
+
+          <!-- Mobile Hamburger Toggle Button -->
+          <button
+            type="button"
+            class="hamburger-btn"
+            id="hamburger-btn"
+            aria-expanded="false"
+            aria-controls="mobile-nav"
+            aria-label="Abrir menú de navegación móvil"
+          >
+            <span class="hamburger-line" aria-hidden="true"></span>
+            <span class="hamburger-line" aria-hidden="true"></span>
+            <span class="hamburger-line" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
     </header>
+
+    <!-- Mobile Navigation Drawer & Backdrop -->
+    <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" aria-hidden="true"></div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Menú principal móvil" hidden>
+      <div class="mobile-nav-header">
+        <span class="mobile-nav-title">Navegación</span>
+        <button
+          type="button"
+          class="btn-close-mobile-nav"
+          id="btn-close-mobile-nav"
+          aria-label="Cerrar menú de navegación móvil"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <ul class="mobile-nav-links">
+        <li>
+          <a href="#board-container" class="mobile-nav-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <rect x="7" y="7" width="3" height="9"></rect>
+              <rect x="14" y="7" width="3" height="5"></rect>
+            </svg>
+            <span>Tablero de Tareas</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="mobile-nav-actions">
+        <button
+          type="button"
+          class="btn btn--primary btn--full"
+          id="mobile-btn-open-create-task"
+          aria-haspopup="dialog"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Nueva Tarea</span>
+        </button>
+      </div>
+    </nav>
 
     <main class="board-container" id="board-container">
     </main>
