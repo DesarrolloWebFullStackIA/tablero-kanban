@@ -98,21 +98,21 @@ const INITIAL_USERS = [
     name: "Ana García",
     email: "ana@example.com",
     role: "Frontend Lead",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana%20Garc%C3%ADa"
+    avatar: "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Ana%20Garc%C3%ADa"
   },
   {
     id: "u2",
     name: "Carlos Ruiz",
     email: "carlos@example.com",
     role: "Backend Dev",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos%20Ruiz"
+    avatar: "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Carlos%20Ruiz"
   },
   {
     id: "u3",
     name: "Elena Gómez",
     email: "elena@example.com",
     role: "UI/UX Designer",
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Elena%20G%C3%B3mez"
+    avatar: "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Elena%20G%C3%B3mez"
   }
 ];
 
