@@ -7,7 +7,7 @@ import api from './api.js';
 import store from './store.js';
 import { renderBoard, updateMetricsUI, updateColumnState, isTaskOverdue, formatDate } from './ui.js';
 import { showToast } from './utils.js';
-import { initCreateTaskModal, initTaskDeletion } from './modal.js';
+import { initCreateTaskModal, initTaskDeletion, initTaskDetailModal } from './modal.js';
 import { initDragAndDrop } from './dragdrop.js';
 
 /**
@@ -173,6 +173,7 @@ export async function initApp() {
   initFilters();
   initCreateTaskModal();
   initTaskDeletion();
+  initTaskDetailModal();
 
   // Initialize Drag and Drop between columns with optimistic UI & rollback
   initDragAndDrop(async (payload) => {

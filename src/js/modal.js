@@ -6,6 +6,7 @@
 import api from './api.js';
 import store from './store.js';
 import { showToast } from './utils.js';
+import { formatDate, isTaskOverdue } from './ui.js';
 
 /**
  * Initializes the Create Task modal dialog and form handlers
@@ -240,4 +241,130 @@ export function initTaskDeletion() {
     });
   }
 }
+
+/**
+ * Maps task status key to human-readable Spanish label
+ * @param {string} status - 'todo' | 'doing' | 'done'
+ * @returns {string}
+ */
+export function getStatusLabel(status) {
+  switch (status) {
+    case 'todo':
+      return 'Por Hacer';
+    case 'doing':
+      return 'En Proceso';
+    case 'done':
+      return 'Finalizado';
+    default:
+      return status || 'Por Hacer';
+  }
+}
+
+/**
+ * Opens and populates the Task Detail modal dialog
+ * @param {string|number} taskId - ID of the task to view
+ */
+export function openTaskDetailModal(taskId) {
+  const dialog = document.getElementById('task-detail-dialog');
+  const task = store.getTaskById(taskId);
+  if (!dialog || !task) return;
+
+  store.setActiveTaskId(taskId);
+
+  // Populate header badges
+  const priorityBadge = document.getElementById('detail-priority-badge');
+  const statusBadge = document.getElementById('detail-status-badge');
+  const dateBadge = document.getElementById('detail-date-badge');
+  const dueDateText = document.getElementById('detail-due-date-text');
+
+  if (priorityBadge) {
+    priorityBadge.textContent = task.priority || 'Media';
+    priorityBadge.className = `badge-priority badge-priority--${task.priority || 'Media'}`;
+  }
+
+  if (statusBadge) {
+    statusBadge.textContent = getStatusLabel(task.status);
+    statusBadge.className = `badge-status badge-status--${task.status}`;
+  }
+
+  const overdue = isTaskOverdue(task.dueDate, task.status);
+  if (dueDateText) {
+    dueDateText.textContent = formatDate(task.dueDate);
+  }
+  if (dateBadge) {
+    dateBadge.classList.toggle('is-overdue', overdue);
+    dateBadge.title = overdue ? 'Tarea vencida' : 'Fecha límite: ' + formatDate(task.dueDate);
+  }
+
+  // Populate editable fields
+  const idInput = document.getElementById('detail-task-id');
+  const titleInput = document.getElementById('detail-task-title-input');
+  const descInput = document.getElementById('detail-task-desc-input');
+
+  if (idInput) idInput.value = String(task.id);
+  if (titleInput) titleInput.value = task.title || '';
+  if (descInput) descInput.value = task.description || '';
+
+  dialog.showModal();
+}
+
+/**
+ * Initializes the Task Detail modal dialog and card click handlers
+ */
+export function initTaskDetailModal() {
+  const dialog = document.getElementById('task-detail-dialog');
+  const closeBtn = document.getElementById('btn-close-detail-dialog');
+
+  if (!dialog) return;
+
+  const closeModal = () => {
+    dialog.close();
+    store.setActiveTaskId(null);
+  };
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeModal);
+  }
+
+  // Close when clicking modal backdrop
+  dialog.addEventListener('click', (e) => {
+    const rect = dialog.getBoundingClientRect();
+    const isInDialog =
+      rect.top <= e.clientY &&
+      e.clientY <= rect.top + rect.height &&
+      rect.left <= e.clientX &&
+      e.clientX <= rect.left + rect.width;
+
+    if (!isInDialog) {
+      closeModal();
+    }
+  });
+
+  // Listen to card clicks on the board container using event delegation
+  const boardContainer = document.getElementById('board-container');
+  if (boardContainer) {
+    boardContainer.addEventListener('click', (e) => {
+      // Ignore click on quick delete button
+      if (e.target.closest('.btn-card-delete')) return;
+
+      const card = e.target.closest('.kanban-card');
+      if (card && card.dataset.id) {
+        openTaskDetailModal(card.dataset.id);
+      }
+    });
+
+    // Keyboard accessibility: Enter or Space on focused card
+    boardContainer.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (e.target.closest('.btn-card-delete')) return;
+        const card = e.target.closest('.kanban-card');
+        if (card && card.dataset.id) {
+          e.preventDefault();
+          openTaskDetailModal(card.dataset.id);
+        }
+      }
+    });
+  }
+}
+
 
