@@ -26,6 +26,7 @@ export function initCreateTaskModal() {
   const prioritySelect = document.getElementById('create-task-priority');
   const dueDateInput = document.getElementById('create-task-due-date');
   const tagsInput = document.getElementById('create-task-tags');
+  const assigneeSelect = document.getElementById('create-task-assignee');
   const statusInput = document.getElementById('create-task-status');
 
   // Error validation containers
@@ -55,6 +56,9 @@ export function initCreateTaskModal() {
     }
     if (tagsInput) {
       tagsInput.value = '';
+    }
+    if (assigneeSelect) {
+      assigneeSelect.value = '';
     }
 
     dialog.showModal();
@@ -132,6 +136,8 @@ export function initCreateTaskModal() {
     const dueDate = dueDateInput?.value || '';
     const status = statusInput?.value || 'todo';
     const tags = parseTags(tagsInput?.value || '');
+    const assigneeId = assigneeSelect?.value || null;
+    const assignee = assigneeId ? store.getUserById(assigneeId) : null;
 
     let isValid = true;
 
@@ -166,6 +172,8 @@ export function initCreateTaskModal() {
         dueDate,
         status,
         tags,
+        assigneeId,
+        assignee,
       });
 
       store.addTask(newTask);
@@ -500,6 +508,12 @@ export async function openTaskDetailModal(taskId) {
     }
   }
 
+  // Populate assignee select
+  const detailAssigneeSelect = document.getElementById('detail-task-assignee');
+  if (detailAssigneeSelect) {
+    detailAssigneeSelect.value = task.assigneeId || (task.assignee?.id) || '';
+  }
+
   // Populate checklist
   renderChecklist(taskId);
   const newSubtaskInput = document.getElementById('input-new-subtask');
@@ -609,6 +623,7 @@ export function initTaskDetailModal() {
   const titleInput = document.getElementById('detail-task-title-input');
   const descInput = document.getElementById('detail-task-desc-input');
   const tagsInput = document.getElementById('detail-task-tags-input');
+  const assigneeSelect = document.getElementById('detail-task-assignee');
   const tagsChips = document.getElementById('detail-tags-chips');
   const saveBtn = document.getElementById('btn-save-task-edits');
 
@@ -622,6 +637,8 @@ export function initTaskDetailModal() {
       const newTitle = (titleInput?.value || '').trim();
       const newDesc = (descInput?.value || '').trim();
       const newTags = parseTags(tagsInput?.value || '');
+      const newAssigneeId = assigneeSelect?.value || null;
+      const newAssignee = newAssigneeId ? store.getUserById(newAssigneeId) : null;
 
       if (!newTitle || newTitle.length < 3) {
         showToast('El título debe tener al menos 3 caracteres.', 'error');
@@ -639,6 +656,8 @@ export function initTaskDetailModal() {
           title: newTitle,
           description: newDesc,
           tags: newTags,
+          assigneeId: newAssigneeId,
+          assignee: newAssignee,
         });
 
         // Update central reactive store
@@ -646,6 +665,8 @@ export function initTaskDetailModal() {
           title: updatedTask.title || newTitle,
           description: updatedTask.description ?? newDesc,
           tags: updatedTask.tags || newTags,
+          assigneeId: updatedTask.assigneeId ?? newAssigneeId,
+          assignee: updatedTask.assignee ?? newAssignee,
         });
 
         // Update tags preview chips in dialog
@@ -835,5 +856,187 @@ export function initTaskDetailModal() {
     });
   }
 }
+
+/**
+ * Populates all assignee select elements across modals with current store users
+ */
+export function populateAssigneeDropdowns() {
+  const users = store.getUsers();
+  const selects = [
+    document.getElementById('create-task-assignee'),
+    document.getElementById('detail-task-assignee'),
+  ];
+
+  selects.forEach((select) => {
+    if (!select) return;
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">Sin asignar</option>';
+    users.forEach((u) => {
+      const option = document.createElement('option');
+      option.value = String(u.id);
+      option.textContent = `${u.name}${u.role ? ` (${u.role})` : ''}`;
+      select.appendChild(option);
+    });
+    if (currentValue) {
+      select.value = currentValue;
+    }
+  });
+}
+
+/**
+ * Renders the users list in the user management dialog
+ */
+export function renderUsersList() {
+  const list = document.getElementById('users-list');
+  if (!list) return;
+
+  const users = store.getUsers();
+  if (users.length === 0) {
+    list.innerHTML = '<p class="users-empty">No hay usuarios registrados.</p>';
+    return;
+  }
+
+  list.innerHTML = users
+    .map(
+      (u) => `
+    <div class="user-card-item" data-user-id="${escapeHtml(String(u.id))}">
+      <img
+        src="${escapeHtml(u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name || 'User')}`)}"
+        alt="${escapeHtml(u.name)}"
+        class="user-card-avatar"
+      />
+      <div class="user-card-info">
+        <span class="user-card-name">${escapeHtml(u.name)}</span>
+        <span class="user-card-email">${escapeHtml(u.email || '')}</span>
+      </div>
+      ${u.role ? `<span class="user-card-role-badge">${escapeHtml(u.role)}</span>` : ''}
+    </div>
+  `
+    )
+    .join('');
+}
+
+/**
+ * Initializes the User Management modal dialog and form handlers
+ */
+export function initUserModal() {
+  const dialog = document.getElementById('user-management-dialog');
+  const openBtnHeader = document.getElementById('btn-open-users-modal');
+  const openBtnMobile = document.getElementById('mobile-btn-open-users');
+  const closeBtn = document.getElementById('btn-close-users-dialog');
+  const form = document.getElementById('form-create-user');
+
+  const nameInput = document.getElementById('new-user-name');
+  const emailInput = document.getElementById('new-user-email');
+  const roleInput = document.getElementById('new-user-role');
+  const errorName = document.getElementById('error-user-name');
+  const errorEmail = document.getElementById('error-user-email');
+  const submitBtn = document.getElementById('btn-submit-create-user');
+
+  if (!dialog) return;
+
+  const clearErrors = () => {
+    if (errorName) errorName.textContent = '';
+    if (errorEmail) errorEmail.textContent = '';
+  };
+
+  const openModal = () => {
+    if (form) form.reset();
+    clearErrors();
+    renderUsersList();
+    dialog.showModal();
+    setTimeout(() => nameInput?.focus(), 50);
+  };
+
+  const closeModal = () => {
+    dialog.close();
+    if (form) form.reset();
+    clearErrors();
+  };
+
+  if (openBtnHeader) openBtnHeader.addEventListener('click', openModal);
+  if (openBtnMobile) openBtnMobile.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+  // Close when clicking modal backdrop
+  dialog.addEventListener('click', (e) => {
+    const rect = dialog.getBoundingClientRect();
+    const isInDialog =
+      rect.top <= e.clientY &&
+      e.clientY <= rect.top + rect.height &&
+      rect.left <= e.clientX &&
+      e.clientX <= rect.left + rect.width;
+
+    if (!isInDialog) {
+      closeModal();
+    }
+  });
+
+  // Validation listeners
+  nameInput?.addEventListener('input', () => {
+    if (nameInput.value.trim().length >= 2 && errorName) errorName.textContent = '';
+  });
+
+  emailInput?.addEventListener('input', () => {
+    if (emailInput.value.trim() && errorEmail) errorEmail.textContent = '';
+  });
+
+  // Form submission
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrors();
+
+      const name = (nameInput?.value || '').trim();
+      const email = (emailInput?.value || '').trim();
+      const role = (roleInput?.value || '').trim();
+
+      let isValid = true;
+
+      if (!name || name.length < 2) {
+        if (errorName) errorName.textContent = 'El nombre es obligatorio (mínimo 2 caracteres).';
+        nameInput?.focus();
+        isValid = false;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        if (errorEmail) errorEmail.textContent = 'Introduce un correo electrónico válido.';
+        if (isValid) emailInput?.focus();
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Registrando...';
+        }
+
+        const newUser = await api.createUser({
+          name,
+          email,
+          role: role || 'Colaborador',
+        });
+
+        store.addUser(newUser);
+        renderUsersList();
+        populateAssigneeDropdowns();
+        form.reset();
+        showToast(`Usuario "${newUser.name}" registrado correctamente`, 'success');
+      } catch (err) {
+        console.error('Error al registrar usuario:', err);
+        showToast('Error al registrar el usuario en el servidor.', 'error', 5000);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Registrar Miembro';
+        }
+      }
+    });
+  }
+}
+
 
 

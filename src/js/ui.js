@@ -1,4 +1,5 @@
 import { getTagColorIndex } from './utils.js';
+import store from './store.js';
 
 /**
  * Escapes HTML entities to prevent XSS vulnerabilities
@@ -127,6 +128,18 @@ export function createCardElement(task, commentsCount = 0) {
       </span>`;
   }
 
+  let assigneeHtml = '';
+  const assignee = task.assignee || (task.assigneeId ? store.getUserById(task.assigneeId) : null);
+  if (assignee) {
+    const avatarUrl =
+      assignee.avatar ||
+      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(assignee.name || 'User')}`;
+    assigneeHtml = `
+      <span class="card-avatar" title="Asignado a: ${escapeHtml(assignee.name || 'Usuario')}">
+        <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(assignee.name || 'Usuario')}" class="card-avatar-img" />
+      </span>`;
+  }
+
   const commentsBadgeHtml = commentsCount > 0
     ? `<span class="card-comments-badge" title="${commentsCount} comentario${commentsCount > 1 ? 's' : ''}">
         ${commentsIcon}
@@ -161,6 +174,7 @@ export function createCardElement(task, commentsCount = 0) {
         <span>${formattedDueDate}</span>
       </span>
       <div class="card-footer-indicators">
+        ${assigneeHtml}
         ${checklistBadgeHtml}
         ${commentsBadgeHtml}
       </div>

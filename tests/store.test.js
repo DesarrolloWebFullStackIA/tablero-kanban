@@ -280,5 +280,94 @@ describe('Central State Store (store.js)', () => {
       expect(percent).toBe(33);
     });
   });
+
+  describe('User Management & Card Assignment', () => {
+    const sampleUsers = [
+      { id: 'u1', name: 'Ana García', email: 'ana@example.com', role: 'Frontend Lead', avatar: 'https://example.com/ana.svg' },
+      { id: 'u2', name: 'Carlos Mendoza', email: 'carlos@example.com', role: 'Backend Dev', avatar: 'https://example.com/carlos.svg' },
+    ];
+
+    beforeEach(() => {
+      store.setUsers(sampleUsers);
+    });
+
+    it('should set and get all users correctly', () => {
+      const users = store.getUsers();
+      expect(users).toHaveLength(2);
+      expect(users[0].name).toBe('Ana García');
+      expect(users[1].email).toBe('carlos@example.com');
+    });
+
+    it('should find user by id', () => {
+      const user = store.getUserById('u1');
+      expect(user).toBeDefined();
+      expect(user?.name).toBe('Ana García');
+      expect(user?.role).toBe('Frontend Lead');
+
+      const nonExistent = store.getUserById('u999');
+      expect(nonExistent).toBeUndefined();
+    });
+
+    it('should add a new user and emit USER_ADDED event', () => {
+      let emittedEvent = null;
+      let emittedUser = null;
+      const unsubscribe = store.subscribe(({ event, payload }) => {
+        emittedEvent = event;
+        emittedUser = payload;
+      });
+
+      const newUser = {
+        id: 'u3',
+        name: 'Elena Ramos',
+        email: 'elena@example.com',
+        role: 'UI/UX Designer',
+        avatar: 'https://example.com/elena.svg',
+      };
+
+      store.addUser(newUser);
+
+      expect(store.getUsers()).toHaveLength(3);
+      expect(store.getUserById('u3')?.name).toBe('Elena Ramos');
+      expect(emittedEvent).toBe('USER_ADDED');
+      expect(emittedUser).toEqual(newUser);
+
+      unsubscribe();
+    });
+
+    it('should assign a user to a task via assigneeId and assignee object', () => {
+      const task = {
+        id: '99',
+        title: 'Implementar autenticación',
+        status: 'todo',
+        priority: 'Alta',
+        dueDate: '2026-09-30',
+        assigneeId: 'u1',
+        assignee: store.getUserById('u1'),
+      };
+
+      store.addTask(task);
+      const savedTask = store.getTaskById('99');
+
+      expect(savedTask).toBeDefined();
+      expect(savedTask?.assigneeId).toBe('u1');
+      expect(savedTask?.assignee?.name).toBe('Ana García');
+
+      // Update assignee to Carlos
+      const updated = store.updateTask('99', {
+        assigneeId: 'u2',
+        assignee: store.getUserById('u2'),
+      });
+
+      expect(updated?.assigneeId).toBe('u2');
+      expect(updated?.assignee?.name).toBe('Carlos Mendoza');
+    });
+
+    it('should include users in getState()', () => {
+      const state = store.getState();
+      expect(state.users).toBeDefined();
+      expect(state.users).toHaveLength(2);
+    });
+  });
 });
+
 

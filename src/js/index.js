@@ -7,7 +7,13 @@ import api from './api.js';
 import store from './store.js';
 import { renderBoard, updateMetricsUI, updateColumnState, isTaskOverdue, formatDate, updateCardCommentsCount } from './ui.js';
 import { showToast, debounce } from './utils.js';
-import { initCreateTaskModal, initTaskDeletion, initTaskDetailModal } from './modal.js';
+import {
+  initCreateTaskModal,
+  initTaskDeletion,
+  initTaskDetailModal,
+  initUserModal,
+  populateAssigneeDropdowns,
+} from './modal.js';
 import { initDragAndDrop } from './dragdrop.js';
 
 /**
@@ -256,6 +262,7 @@ export async function initApp() {
   initCreateTaskModal();
   initTaskDeletion();
   initTaskDetailModal();
+  initUserModal();
 
   // Initialize Drag and Drop between columns with optimistic UI & rollback
   initDragAndDrop(async (payload) => {
@@ -341,6 +348,11 @@ export async function initApp() {
       return;
     }
 
+    if (event === 'USERS_LOADED' || event === 'USER_ADDED') {
+      populateAssigneeDropdowns();
+      return;
+    }
+
     if (event === 'ACTIVE_TASK_CHANGED') {
       return;
     }
@@ -359,9 +371,17 @@ export async function initApp() {
     updateMetricsUI(state.metrics);
   });
 
-  // Fetch initial tasks from json-server backend
+  // Fetch initial tasks & users from json-server backend
   try {
-    const tasks = await api.getTasks();
+    const [tasks, users] = await Promise.all([
+      api.getTasks(),
+      api.getUsers().catch((err) => {
+        console.warn('Could not load users from server, fallback to empty:', err);
+        return [];
+      }),
+    ]);
+    store.setUsers(users);
+    populateAssigneeDropdowns();
     store.setTasks(tasks);
   } catch (err) {
     console.error('Error al inicializar el tablero Kanban:', err);

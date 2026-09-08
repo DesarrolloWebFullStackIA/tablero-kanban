@@ -22,6 +22,9 @@ class Store {
     /** @type {Task[]} */
     this.tasks = [];
 
+    /** @type {Array<object>} */
+    this.users = [];
+
     /** @type {Map<string, Array<object>>} */
     this.commentsMap = new Map();
 
@@ -72,6 +75,7 @@ class Store {
   getState() {
     return {
       tasks: [...this.tasks],
+      users: [...this.users],
       filters: { ...this.filters },
       metrics: this.getMetrics(),
       activeTaskId: this.activeTaskId,
@@ -350,6 +354,46 @@ class Store {
   getActiveTask() {
     if (!this.activeTaskId) return null;
     return this.getTaskById(this.activeTaskId) || null;
+  }
+
+  // ------------------------------------------------------------------------
+  // User Management
+  // ------------------------------------------------------------------------
+
+  /**
+   * Set entire users collection
+   * @param {Array<object>} users
+   */
+  setUsers(users) {
+    this.users = Array.isArray(users) ? [...users] : [];
+    this.notify('USERS_LOADED', this.users);
+  }
+
+  /**
+   * Get all registered users
+   * @returns {Array<object>}
+   */
+  getUsers() {
+    return [...this.users];
+  }
+
+  /**
+   * Find a user by their ID
+   * @param {string|number} id
+   * @returns {object|undefined}
+   */
+  getUserById(id) {
+    if (!id) return undefined;
+    return this.users.find((u) => String(u.id) === String(id));
+  }
+
+  /**
+   * Add a new user to store
+   * @param {object} user
+   */
+  addUser(user) {
+    this.users.push(user);
+    this.notify('USER_ADDED', user);
   }
 }
 
