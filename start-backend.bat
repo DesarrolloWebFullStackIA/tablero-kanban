@@ -1,0 +1,1 @@
+npx json-server ./data/data.json
