@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tablero Kanban - Drag & Drop Controller (SortableJS Integration)
  * Manages draggable column lists, drag states, and drop events
  */
@@ -17,7 +17,8 @@ export const defaultSortableOptions = {
   preventOnFilter: false,
   fallbackOnBody: true,
   swapThreshold: 0.65,
-  delay: 0,
+  emptyInsertThreshold: 10,
+  delay: 150,
   delayOnTouchOnly: true,
   touchStartThreshold: 5,
 };
