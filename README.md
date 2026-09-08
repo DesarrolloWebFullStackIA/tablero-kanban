@@ -136,17 +136,21 @@ pnpm test
 # or: npm test
 ```
 
-### Test Coverage Highlights:
-- **`tests/utils.test.js`** (12 tests):
+### Test Coverage Highlights (79 tests across 2 suites):
+- **`tests/utils.test.js`** (16 tests):
   - XSS prevention and HTML sanitization (`escapeHtml`).
   - Localized Spanish date formatting (`formatDate`, `formatCommentDate`).
   - Task overdue detection (`isTaskOverdue`), ensuring completed tasks (`status: done`) are never marked overdue.
   - Asynchronous debounce delay and rapid call cancellation (`debounce`).
-- **`tests/store.test.js`** (13 tests):
+  - Hashtag extraction (`extractHashtags`) and deterministic color token assignment (`getTagColorClass`).
+- **`tests/store.test.js`** (63 tests):
   - Reactive CRUD operations (`addTask`, `updateTask`, `moveTask`, `removeTask`).
-  - Combined search and priority filtering logic (`getFilteredTasks`).
+  - Combined search, priority, and hashtag filtering logic (`getFilteredTasks`).
   - Header metrics computation (`getMetrics`).
   - Comments cache storage, additions, and deletions (`setCommentsForTask`, `addComment`, `removeComment`).
+  - Team member management (`setUsers`, `addUser`, `getUserById`).
+  - Subtask checklist management and progress calculations (`toggleSubtask`, `calculateChecklistStats`).
+  - Dynamic column lifecycle (`addColumn`, `renameColumn`, `deleteColumn` with task migration).
 
 ---
 
@@ -159,23 +163,42 @@ The application integrates with `json-server` operating at `http://localhost:300
 | `GET` | `/tasks` | Retrieve all Kanban tasks |
 | `GET` | `/tasks/:id` | Fetch a single task by ID |
 | `POST` | `/tasks` | Create a new task (defaults to status `todo`) |
-| `PATCH` | `/tasks/:id` | Partial update (status move, title/description edit) |
+| `PATCH` | `/tasks/:id` | Partial update (status move, title, description, checklist) |
 | `PUT` | `/tasks/:id` | Full replacement of task entity |
 | `DELETE` | `/tasks/:id` | Permanently delete a task |
 | `GET` | `/comments?taskId=:id` | Fetch all comments associated with a task |
 | `POST` | `/comments` | Append a new comment to a task |
 | `DELETE` | `/comments/:id` | Permanently delete an individual comment |
+| `GET` | `/users` | Retrieve all registered team members |
+| `POST` | `/users` | Register a new team member with avatar |
 
 ### Example Task Payload:
 ```json
 {
   "id": "1",
-  "title": "Diseñar maqueta en Figma",
+  "title": "Diseñar maqueta en Figma #ux #design",
   "description": "Crear wireframes interactivos y paleta de colores.",
   "priority": "Alta",
   "dueDate": "2026-09-15",
   "status": "todo",
+  "tags": ["#ux", "#design"],
+  "assigneeId": "u1",
+  "checklist": [
+    { "id": "c1", "text": "Wireframe de baja fidelidad", "completed": true },
+    { "id": "c2", "text": "Prototipo interactivo en Figma", "completed": false }
+  ],
   "createdAt": "2026-09-08T09:00:00Z"
+}
+```
+
+### Example User Payload:
+```json
+{
+  "id": "u1",
+  "name": "Ana Gómez",
+  "email": "ana.gomez@example.com",
+  "role": "Frontend Dev",
+  "avatar": "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Ana"
 }
 ```
 

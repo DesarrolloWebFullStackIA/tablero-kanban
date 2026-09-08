@@ -96,31 +96,34 @@ The design system delivers an intuitive, distraction-free Kanban interface with 
 - **Global Actions**: "+ Nueva Tarea" button, Theme Toggle (Sun / Moon icon), and Mobile Hamburger Menu button (`aria-expanded`, `aria-label`).
 
 ### 2. Toolbar (Search & Filter)
-- **Live Search Input**: Text input filtering tasks by title in real-time.
+- **Live Search Input**: Text input filtering tasks by title in real-time with debounce (250ms).
 - **Priority Dropdown**: Filter cards by `Todas`, `Baja`, `Media`, `Alta`.
+- **Hashtag Dropdown**: Filter cards by extracted `#tag`.
 - **Reset Button**: Clears active filters with immediate UI restoration.
 
 ### 3. Kanban Board & Columns
-- **Layout**: CSS Grid on desktop (`repeat(3, 1fr)` or auto-fit with min-width `300px`), horizontal smooth-scrolling or stacked view on mobile.
+- **Layout**: Fluid flex layout expanding to 100% of viewport width and 100vh height (`clamp(290px, 21vw, 360px)` per column).
+- **Dynamic Columns**: "+ Añadir Columna" action button/card, inline column renaming (`Enter`/`Escape`), and safe column deletion.
 - **Column Card**:
-  - Column Header with title, accent color pill, and task count badge.
-  - Cards Container: Drop zone monitored by SortableJS.
-  - Empty State Placeholder: Friendly illustrated text when a column has zero cards.
+  - Column Header with title, accent color indicator pill, and live task count badge.
+  - Cards Container: Drop zone monitored by SortableJS with independent vertical scroll.
+  - Empty State Placeholder: Accessible dashed outline and icon when a column has zero cards.
 
 ### 4. Task Card
 - **Structure**:
   - Top: Priority tag pill (`Baja`, `Media`, `Alta`) and quick-action delete button.
-  - Middle: Task title (bold, clamped to 2 lines) and brief description excerpt.
-  - Bottom: Due date badge (with calendar icon; turns red/warning if overdue) and comments count indicator.
-- **Drag State**: Card gains elevation shadow, slight rotation (1.5deg), and opacity reduction during active drag.
+  - Middle: Task title (bold, clamped to 2 lines), description excerpt, and colored hashtag chips (`.tag-chip--color-0` to `5`).
+  - Bottom: Due date badge (with overdue warning styling), team member avatar (Bottts Neutral robot), checklist progress badge (`0/2`), and comments count indicator.
+- **Drag State**: Card gains elevation shadow, slight rotation (2deg), scale up (1.02), and ghost dropzone outline during active drag.
 
 ### 5. Dialog Modals (`<dialog>`)
-- **Native Modal Behavior**: Triggered with `dialog.showModal()`.
-- **Focus Rings**: High-contrast outline on focused form inputs (`outline: 2px solid var(--color-primary)`).
-- **Close Button**: Accessible `X` button and `Cancel` button.
+- **Native Modal Behavior**: Triggered with `dialog.showModal()`, native backdrop blur filter.
+- **Task Creation Modal**: Validated form with title, description, priority, due date, tags preview, and assignee selection.
+- **Task Detail Modal**: Inline editable fields, interactive checklist subtasks with animated progress bar, and real-time comments thread.
+- **User Management Modal**: Team roster with Bottts Neutral avatars and new member registration form.
 
-### 6. Responsive Breakpoints
-- **Mobile (< 768px)**: Stacked single-column or swipeable board, collapsible hamburger menu for stats/actions.
-- **Tablet (768px - 1024px)**: 3-column board with horizontal scroll if needed.
-- **Desktop (> 1024px)**: Full 3-column equal-width grid with fixed header and full toolbar controls.
+### 6. Responsive Breakpoints & Snap Scrolling
+- **Mobile (< 768px)**: Horizontal snap-scrolling (`scroll-snap-type: x mandatory`), each column centered at 86vw-88vw width with internal card scrolling. Compact dialogs and stacked buttons on screens <= 480px.
+- **Tablet (768px - 1024px)**: Fluid columns with compact metrics and wrapping toolbar.
+- **Desktop (> 1024px)**: Full fluid layout stretching to 100% width on 1080p, 1440p, 4K, and ultrawide screens. No rigid 1400px bottlenecks.
 
