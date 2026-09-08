@@ -215,7 +215,130 @@
       </section>
     </div>
 
-    <main class="board-container" id="board-container">
+    <main class="board-container" id="board-container" role="main" aria-label="Tablero Kanban de Tareas">
+      <div class="board-grid">
+        <!-- Column 1: Por Hacer (todo) -->
+        <section class="kanban-column kanban-column--todo" id="column-todo" data-status="todo" aria-labelledby="heading-col-todo">
+          <header class="column-header">
+            <div class="column-title-wrapper">
+              <span class="column-indicator column-indicator--todo" aria-hidden="true"></span>
+              <h2 class="column-title" id="heading-col-todo">Por Hacer</h2>
+              <span class="column-counter" id="counter-todo" aria-label="0 tareas en Por Hacer">0</span>
+            </div>
+            <button
+              type="button"
+              class="btn-column-add"
+              data-column="todo"
+              aria-label="Añadir tarea a Por Hacer"
+              title="Añadir tarea aquí"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </header>
+
+          <div
+            class="kanban-cards-list"
+            id="cards-todo"
+            data-status="todo"
+            role="region"
+            aria-label="Lista de tareas por hacer"
+          >
+            <!-- Empty Placeholder -->
+            <div class="column-empty-state" id="empty-todo" aria-hidden="false">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="9" x2="15" y2="9"></line>
+                <line x1="9" y1="13" x2="15" y2="13"></line>
+                <line x1="9" y1="17" x2="11" y2="17"></line>
+              </svg>
+              <p class="empty-state-text">Sin tareas pendientes</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Column 2: En Proceso (doing) -->
+        <section class="kanban-column kanban-column--doing" id="column-doing" data-status="doing" aria-labelledby="heading-col-doing">
+          <header class="column-header">
+            <div class="column-title-wrapper">
+              <span class="column-indicator column-indicator--doing" aria-hidden="true"></span>
+              <h2 class="column-title" id="heading-col-doing">En Proceso</h2>
+              <span class="column-counter" id="counter-doing" aria-label="0 tareas en En Proceso">0</span>
+            </div>
+            <button
+              type="button"
+              class="btn-column-add"
+              data-column="doing"
+              aria-label="Añadir tarea a En Proceso"
+              title="Añadir tarea aquí"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </header>
+
+          <div
+            class="kanban-cards-list"
+            id="cards-doing"
+            data-status="doing"
+            role="region"
+            aria-label="Lista de tareas en proceso"
+          >
+            <!-- Empty Placeholder -->
+            <div class="column-empty-state" id="empty-doing" aria-hidden="false">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <p class="empty-state-text">No hay tareas en progreso</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Column 3: Finalizado (done) -->
+        <section class="kanban-column kanban-column--done" id="column-done" data-status="done" aria-labelledby="heading-col-done">
+          <header class="column-header">
+            <div class="column-title-wrapper">
+              <span class="column-indicator column-indicator--done" aria-hidden="true"></span>
+              <h2 class="column-title" id="heading-col-done">Finalizado</h2>
+              <span class="column-counter" id="counter-done" aria-label="0 tareas finalizadas">0</span>
+            </div>
+            <button
+              type="button"
+              class="btn-column-add"
+              data-column="done"
+              aria-label="Añadir tarea a Finalizado"
+              title="Añadir tarea aquí"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </header>
+
+          <div
+            class="kanban-cards-list"
+            id="cards-done"
+            data-status="done"
+            role="region"
+            aria-label="Lista de tareas finalizadas"
+          >
+            <!-- Empty Placeholder -->
+            <div class="column-empty-state" id="empty-done" aria-hidden="false">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <p class="empty-state-text">No hay tareas completadas aún</p>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
   </body>
 </html>
