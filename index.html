@@ -1,13 +1,96 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tablero Kanban ATTL</title>
+    <meta name="description" content="Tablero Kanban interactivo con gestión de tareas, drag & drop y persistencia REST." />
+    <title>Tablero Kanban</title>
+    <link rel="stylesheet" href="./src/css/index.css" />
+    <script type="module" src="./src/js/index.js"></script>
   </head>
   <body>
-    <main>
-        
+    <!-- App Header & Quick Statistics Dashboard -->
+    <header class="app-header" role="banner">
+      <div class="header-container">
+        <div class="header-brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <rect x="7" y="7" width="3" height="9"></rect>
+              <rect x="14" y="7" width="3" height="5"></rect>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">Tablero Kanban</h1>
+            <span class="brand-subtitle">Gestión Ágil de Tareas</span>
+          </div>
+        </div>
+
+        <!-- Quick Statistics Panel -->
+        <section class="metrics-dashboard" aria-label="Panel de estadísticas rápidas">
+          <div class="metric-pill metric-pill--todo" title="Tareas por hacer">
+            <span class="metric-indicator" aria-hidden="true"></span>
+            <span class="metric-label">Por Hacer:</span>
+            <strong class="metric-value" id="metric-todo-count" aria-live="polite">0</strong>
+          </div>
+          <div class="metric-pill metric-pill--doing" title="Tareas en proceso">
+            <span class="metric-indicator" aria-hidden="true"></span>
+            <span class="metric-label">En Proceso:</span>
+            <strong class="metric-value" id="metric-doing-count" aria-live="polite">0</strong>
+          </div>
+          <div class="metric-pill metric-pill--done" title="Tareas finalizadas">
+            <span class="metric-indicator" aria-hidden="true"></span>
+            <span class="metric-label">Finalizado:</span>
+            <strong class="metric-value" id="metric-done-count" aria-live="polite">0</strong>
+          </div>
+          <div class="metric-pill metric-pill--total" title="Total de tareas">
+            <span class="metric-label">Total:</span>
+            <strong class="metric-value" id="metric-total-count" aria-live="polite">0</strong>
+          </div>
+        </section>
+
+        <!-- Header Actions: Theme toggle & Add Task button -->
+        <div class="header-actions">
+          <button
+            type="button"
+            class="btn-theme-toggle"
+            id="theme-toggle"
+            aria-label="Cambiar a modo oscuro"
+            title="Cambiar tema claro/oscuro"
+          >
+            <svg class="theme-icon theme-icon--sun" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="theme-icon theme-icon--moon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="btn btn--primary"
+            id="btn-open-create-task"
+            aria-haspopup="dialog"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Nueva Tarea</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="board-container" id="board-container">
     </main>
   </body>
 </html>
