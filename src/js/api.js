@@ -1,12 +1,80 @@
 /**
- * Tablero Kanban - REST API Service Module
- * Handles all asynchronous HTTP requests with json-server (localhost:3000)
+ * Tablero Kanban - Live Demo Mock API Module (GitHub Pages Standalone)
+ * Operates 100% in-memory without requiring any backend server or external database.
+ * Ideal for public web demos, portfolio showcases, and GitHub Pages hosting.
  */
 
-export const BASE_URL = 'http://localhost:3000';
+const INITIAL_TASKS = [
+  {
+    id: "1",
+    title: "Diseñar maqueta en Figma",
+    description: "Crear los wireframes y prototipos interactivos del tablero.",
+    priority: "Alta",
+    dueDate: "2026-09-15",
+    status: "todo",
+    createdAt: "2026-09-08T09:00:00Z"
+  },
+  {
+    id: "2",
+    title: "Configurar json-server",
+    description: "Iniciar la API simulada con las colecciones de tareas y comentarios.",
+    priority: "Media",
+    dueDate: "2026-09-10",
+    status: "doing",
+    createdAt: "2026-09-08T09:30:00Z"
+  },
+  {
+    id: "3",
+    title: "Estructurar HTML semántico",
+    description: "Definir las columnas principales y la cabecera del tablero con accesibilidad.",
+    priority: "Baja",
+    dueDate: "2026-09-12",
+    status: "done",
+    createdAt: "2026-09-08T10:00:00Z"
+  },
+  {
+    id: "4",
+    title: "Auditoría de accesibilidad WCAG AA",
+    description: "Verificar contrastes de color, navegación por teclado y lectores de pantalla.",
+    priority: "Alta",
+    dueDate: "2026-09-05",
+    status: "todo",
+    createdAt: "2026-09-08T10:15:00Z"
+  }
+];
+
+const INITIAL_COMMENTS = [
+  {
+    id: "101",
+    taskId: "1",
+    author: "Ana Gómez",
+    text: "Recuerda incluir los estados de hover en los botones del modal.",
+    createdAt: "2026-09-06T10:30:00Z"
+  },
+  {
+    id: "102",
+    taskId: "1",
+    author: "Carlos Ruiz",
+    text: "Ya subí la paleta de colores al canal de Figma.",
+    createdAt: "2026-09-06T11:15:00Z"
+  },
+  {
+    id: "103",
+    taskId: "2",
+    author: "Laura Martínez",
+    text: "El script start-project.bat funciona correctamente en el puerto 3000.",
+    createdAt: "2026-09-07T14:20:00Z"
+  }
+];
+
+// In-memory data collections for live session
+let inMemoryTasks = JSON.parse(JSON.stringify(INITIAL_TASKS));
+let inMemoryComments = JSON.parse(JSON.stringify(INITIAL_COMMENTS));
+
+export const BASE_URL = 'https://desarrollowebfullstackia.github.io/tablero-kanban';
 
 /**
- * Custom Error class for API network and HTTP response errors
+ * Custom Error class for API response errors
  */
 export class ApiError extends Error {
   constructor(message, status = 0, endpoint = '') {
@@ -17,70 +85,16 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Centralized fetch wrapper with JSON serialization and robust error handling
- * @param {string} endpoint - API endpoint path (e.g. '/tasks')
- * @param {RequestInit} [options={}] - Standard Fetch options
- * @returns {Promise<any>} Parsed JSON response or null
- */
-async function request(endpoint, options = {}) {
-  const url = `${BASE_URL}${endpoint}`;
-  const headers = {
-    'Accept': 'application/json',
-    ...(options.headers || {}),
-  };
-
-  if (options.body && typeof options.body === 'object' && !(options.body instanceof FormData)) {
-    headers['Content-Type'] = 'application/json';
-    options.body = JSON.stringify(options.body);
-  }
-
-  try {
-    const response = await fetch(url, { ...options, headers });
-
-    if (!response.ok) {
-      let errorMessage = `HTTP Error ${response.status}: ${response.statusText}`;
-      try {
-        const errorData = await response.json();
-        if (errorData && errorData.message) {
-          errorMessage = errorData.message;
-        }
-      } catch {
-        // Response body was not JSON, retain default error message
-      }
-      throw new ApiError(errorMessage, response.status, endpoint);
-    }
-
-    // 204 No Content handling
-    if (response.status === 204) {
-      return null;
-    }
-
-    return await response.json();
-  } catch (error) {
-    if (error instanceof ApiError) {
-      throw error;
-    }
-
-    // Network connection failure (e.g. json-server offline)
-    throw new ApiError(
-      `No se pudo conectar con el servidor backend (${BASE_URL}). Asegúrate de haber ejecutado 'start-backend.bat'. Detalle: ${error.message}`,
-      0,
-      endpoint
-    );
-  }
-}
-
 // --------------------------------------------------------------------------
-// Tasks API Endpoints
+// Tasks API Endpoints (In-Memory Mock)
 // --------------------------------------------------------------------------
 
 /**
- * Fetch all tasks from the server
+ * Fetch all tasks from in-memory collection
  * @returns {Promise<Array<object>>} List of tasks
  */
 export async function getTasks() {
-  return await request('/tasks');
+  return JSON.parse(JSON.stringify(inMemoryTasks));
 }
 
 /**
@@ -89,65 +103,76 @@ export async function getTasks() {
  * @returns {Promise<object>} Task entity
  */
 export async function getTaskById(id) {
-  return await request(`/tasks/${id}`);
+  const task = inMemoryTasks.find((t) => String(t.id) === String(id));
+  if (!task) {
+    throw new ApiError(`Tarea con id ${id} no encontrada`, 404, `/tasks/${id}`);
+  }
+  return JSON.parse(JSON.stringify(task));
 }
 
 /**
- * Create a new task entity
+ * Create a new task entity in-memory
  * @param {object} taskData - Task payload (title, description, priority, dueDate, status)
- * @returns {Promise<object>} Created task with server-assigned ID
+ * @returns {Promise<object>} Created task with generated ID
  */
 export async function createTask(taskData) {
-  const payload = {
+  const newTask = {
     ...taskData,
+    id: String(Date.now()),
     status: taskData.status || 'todo',
     createdAt: taskData.createdAt || new Date().toISOString(),
   };
-  return await request('/tasks', {
-    method: 'POST',
-    body: payload,
-  });
+  inMemoryTasks.push(newTask);
+  return JSON.parse(JSON.stringify(newTask));
 }
 
 /**
- * Update task fields partially (e.g., status on drag & drop or title/description edits)
+ * Update task fields partially in-memory
  * @param {string|number} id - Task identifier
  * @param {object} updates - Fields to update
  * @returns {Promise<object>} Updated task
  */
 export async function updateTask(id, updates) {
-  return await request(`/tasks/${id}`, {
-    method: 'PATCH',
-    body: updates,
-  });
+  const index = inMemoryTasks.findIndex((t) => String(t.id) === String(id));
+  if (index === -1) {
+    throw new ApiError(`Tarea con id ${id} no encontrada`, 404, `/tasks/${id}`);
+  }
+  inMemoryTasks[index] = { ...inMemoryTasks[index], ...updates };
+  return JSON.parse(JSON.stringify(inMemoryTasks[index]));
 }
 
 /**
- * Replace complete task entity
+ * Replace complete task entity in-memory
  * @param {string|number} id - Task identifier
  * @param {object} taskData - Full task entity
  * @returns {Promise<object>} Updated task
  */
 export async function replaceTask(id, taskData) {
-  return await request(`/tasks/${id}`, {
-    method: 'PUT',
-    body: taskData,
-  });
+  const index = inMemoryTasks.findIndex((t) => String(t.id) === String(id));
+  if (index === -1) {
+    throw new ApiError(`Tarea con id ${id} no encontrada`, 404, `/tasks/${id}`);
+  }
+  inMemoryTasks[index] = { ...taskData, id: String(id) };
+  return JSON.parse(JSON.stringify(inMemoryTasks[index]));
 }
 
 /**
- * Delete a task permanently from the database
+ * Delete a task permanently from in-memory collection
  * @param {string|number} id - Task identifier
  * @returns {Promise<object|null>}
  */
 export async function deleteTask(id) {
-  return await request(`/tasks/${id}`, {
-    method: 'DELETE',
-  });
+  const index = inMemoryTasks.findIndex((t) => String(t.id) === String(id));
+  if (index === -1) {
+    return null;
+  }
+  const [deleted] = inMemoryTasks.splice(index, 1);
+  inMemoryComments = inMemoryComments.filter((c) => String(c.taskId) !== String(id));
+  return deleted;
 }
 
 // --------------------------------------------------------------------------
-// Comments API Endpoints
+// Comments API Endpoints (In-Memory Mock)
 // --------------------------------------------------------------------------
 
 /**
@@ -156,34 +181,37 @@ export async function deleteTask(id) {
  * @returns {Promise<Array<object>>} List of comments
  */
 export async function getCommentsByTaskId(taskId) {
-  return await request(`/comments?taskId=${taskId}`);
+  const comments = inMemoryComments.filter((c) => String(c.taskId) === String(taskId));
+  return JSON.parse(JSON.stringify(comments));
 }
 
 /**
- * Create a new comment attached to a task
+ * Create a new comment attached to a task in-memory
  * @param {object} commentData - Comment payload (taskId, author, text)
  * @returns {Promise<object>} Created comment
  */
 export async function createComment(commentData) {
-  const payload = {
+  const newComment = {
     ...commentData,
+    id: String(Date.now()),
     createdAt: commentData.createdAt || new Date().toISOString(),
   };
-  return await request('/comments', {
-    method: 'POST',
-    body: payload,
-  });
+  inMemoryComments.push(newComment);
+  return JSON.parse(JSON.stringify(newComment));
 }
 
 /**
- * Delete an individual comment
+ * Delete an individual comment from in-memory collection
  * @param {string|number} id - Comment identifier
  * @returns {Promise<object|null>}
  */
 export async function deleteComment(id) {
-  return await request(`/comments/${id}`, {
-    method: 'DELETE',
-  });
+  const index = inMemoryComments.findIndex((c) => String(c.id) === String(id));
+  if (index === -1) {
+    return null;
+  }
+  const [deleted] = inMemoryComments.splice(index, 1);
+  return deleted;
 }
 
 export default {

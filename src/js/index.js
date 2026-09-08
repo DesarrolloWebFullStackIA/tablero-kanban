@@ -298,17 +298,17 @@ export async function initApp() {
     updateMetricsUI(state.metrics);
   });
 
-  // Fetch initial tasks from json-server backend
+  // Fetch initial tasks from in-memory mock repository
   try {
     const tasks = await api.getTasks();
     store.setTasks(tasks);
-  } catch (err) {
-    console.error('Error al inicializar el tablero Kanban:', err);
     showToast(
-      'No se pudo conectar con el backend (json-server en puerto 3000). Asegúrate de iniciarlo con "npm run server".',
-      'error',
+      '✨ Modo Live Demo activo: interactúa libremente con tareas, comentarios y drag & drop (100% en memoria para GitHub Pages).',
+      'info',
       6000
     );
+  } catch (err) {
+    console.error('Error al inicializar el tablero Kanban:', err);
   }
 }
 
