@@ -7,7 +7,7 @@ import api from './api.js';
 import store from './store.js';
 import { renderBoard, updateMetricsUI } from './ui.js';
 import { showToast } from './utils.js';
-import { initCreateTaskModal } from './modal.js';
+import { initCreateTaskModal, initTaskDeletion } from './modal.js';
 
 /**
  * 1. Theme Management (Light / Dark mode)
@@ -171,6 +171,7 @@ export async function initApp() {
   initMobileNav();
   initFilters();
   initCreateTaskModal();
+  initTaskDeletion();
 
   // Reactive UI update whenever state changes
   store.subscribe(({ event, payload, state }) => {

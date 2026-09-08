@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tablero Kanban - Modal Dialogs Controller
  * Handles modal lifecycle, forms validation, and submissions for task creation
  */
@@ -175,3 +175,69 @@ export function initCreateTaskModal() {
     }
   });
 }
+
+/**
+ * Executes task deletion with confirmation prompt, API call, and state removal
+ * @param {string|number} taskId - Task identifier
+ */
+export async function deleteTaskWorkflow(taskId) {
+  if (!taskId) return;
+  const task = store.getTaskById(taskId);
+  const taskTitle = task ? task.title : 'esta tarea';
+
+  const confirmed = window.confirm(
+    `¿Estás seguro de que deseas eliminar la tarea "${taskTitle}"?\nEsta acción no se puede deshacer.`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    // If the task detail modal is open for this task, close it
+    const detailDialog = document.getElementById('task-detail-dialog');
+    if (detailDialog && detailDialog.open) {
+      const detailTaskIdInput = document.getElementById('detail-task-id');
+      if (detailTaskIdInput && String(detailTaskIdInput.value) === String(taskId)) {
+        detailDialog.close();
+      }
+    }
+
+    await api.deleteTask(taskId);
+    store.removeTask(taskId);
+    showToast('Tarea eliminada correctamente', 'info');
+  } catch (err) {
+    console.error('Error al eliminar la tarea:', err);
+    showToast('Error al eliminar la tarea. Verifica la conexión con el servidor.', 'error', 5000);
+  }
+}
+
+/**
+ * Initializes task deletion listeners on the board and detail modal
+ */
+export function initTaskDeletion() {
+  const boardContainer = document.getElementById('board-container');
+  if (boardContainer) {
+    boardContainer.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.btn-card-delete');
+      if (deleteBtn) {
+        e.stopPropagation();
+        e.preventDefault();
+        const taskId = deleteBtn.dataset.id;
+        if (taskId) {
+          deleteTaskWorkflow(taskId);
+        }
+      }
+    });
+  }
+
+  const detailDeleteBtn = document.getElementById('btn-delete-task');
+  if (detailDeleteBtn) {
+    detailDeleteBtn.addEventListener('click', () => {
+      const detailTaskIdInput = document.getElementById('detail-task-id');
+      const activeTaskId = detailTaskIdInput?.value || store.activeTaskId;
+      if (activeTaskId) {
+        deleteTaskWorkflow(activeTaskId);
+      }
+    });
+  }
+}
+
