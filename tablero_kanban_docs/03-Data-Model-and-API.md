@@ -33,8 +33,20 @@ Represents an individual Kanban card.
 | `description`| String | No | Text | Detailed explanation |
 | `priority` | String | Yes | `"Baja"`, `"Media"`, `"Alta"` | Urgency level |
 | `dueDate` | String | Yes | `YYYY-MM-DD` | Target deadline |
-| `status` | String | Yes | `"todo"`, `"doing"`, `"done"` | Current column state |
+| `status` | String | Yes | `"todo"`, `"doing"`, `"done"`, or custom column ID | Current column state |
+| `tags` | Array<String> | No | e.g. `["#ux", "#design"]` | Category hashtags with deterministic colors |
+| `assigneeId` | String | No | References `users.id` (e.g. `"u1"`) | Assigned team member |
+| `checklist` | Array<Object> | No | Array of subtask checklist items | Subtask verification items |
 | `createdAt` | String | No | ISO 8601 string | Creation timestamp |
+
+#### Subtask Item Schema (`checklist[]`)
+```json
+{
+  "id": "c1",
+  "text": "Complete accessible wireframe",
+  "completed": false
+}
+```
 
 ### 2. Comment Entity (`/comments`)
 Represents discussion entries attached to a task.
@@ -58,6 +70,28 @@ Represents discussion entries attached to a task.
 | `text` | String | Yes | Non-empty text | Comment message body |
 | `createdAt` | String | Yes | ISO 8601 string | Timestamp of submission |
 
+### 3. User Entity (`/users`)
+Represents registered team members available for task assignment.
+
+```json
+{
+  "id": "u1",
+  "name": "Ana Gómez",
+  "email": "ana.gomez@example.com",
+  "role": "Frontend Dev",
+  "avatar": "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Ana"
+}
+```
+
+#### Fields Description
+| Field | Type | Required | Values / Constraints | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `id` | String | Yes (Auto) | Unique string identifier (e.g. `"u1"`) | Primary key |
+| `name` | String | Yes | Non-empty text | Full name of the team member |
+| `email` | String | Yes | Valid email string | Contact email address |
+| `role` | String | Yes | Non-empty text (e.g. `"Frontend Dev"`) | Job title or role |
+| `avatar` | String | No | URL to DiceBear SVG | Bottts Neutral robot avatar |
+
 ---
 
 ## REST API Endpoints Specification
@@ -67,12 +101,14 @@ Represents discussion entries attached to a task.
 | `GET` | `/tasks` | Retrieve all tasks | None | `200 OK` |
 | `GET` | `/tasks/:id` | Retrieve single task by ID | None | `200 OK` / `404 Not Found` |
 | `POST` | `/tasks` | Create a new task | Task object without `id` | `201 Created` |
-| `PATCH` | `/tasks/:id` | Partial update (status, title, etc.) | Partial fields `{ status: "doing" }` | `200 OK` |
+| `PATCH` | `/tasks/:id` | Partial update (status, title, description, checklist) | Partial fields `{ status: "doing" }` | `200 OK` |
 | `PUT` | `/tasks/:id` | Full replacement of task object | Complete task object | `200 OK` |
 | `DELETE`| `/tasks/:id` | Remove task permanently | None | `200 OK` |
 | `GET` | `/comments?taskId=:id` | Fetch all comments for a specific task | None | `200 OK` |
 | `POST` | `/comments` | Add a comment to a task | Comment object without `id` | `201 Created` |
 | `DELETE`| `/comments/:id` | Remove an individual comment | None | `200 OK` |
+| `GET` | `/users` | Retrieve all registered team members | None | `200 OK` |
+| `POST` | `/users` | Register a new team member with avatar | User object without `id` | `201 Created` |
 
 ---
 

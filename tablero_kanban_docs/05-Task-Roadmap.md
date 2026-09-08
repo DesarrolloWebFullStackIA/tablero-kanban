@@ -76,11 +76,42 @@ This document tracks the phased development lifecycle of the **Tablero Kanban** 
   - Fetch and render comments (`GET /comments?taskId=:id`).
   - New comment form dispatching `POST /comments` with instant UI refresh.
 
-## Phase 8: Real-Time Search, Filters, Vitest Tests & Production Polish
+## Phase 8: Real-Time Search, Filters, Vitest Tests & Production Polish (`v8.0.0`)
 - **Focus**: UX enhancements, bonus challenges, automated testing, and final review.
 - **Deliverables**:
-  - Real-time debounced title search.
-  - Priority filter (`Todas`, `Baja`, `Media`, `Alta`).
-  - Vitest test suite for date formatters and filter logic (+0.2 pts bonus).
-  - Professional `README.md` with installation commands, architecture summary, and screenshots.
+  - [x] Real-time debounced title search.
+  - [x] Priority filter (`Todas`, `Baja`, `Media`, `Alta`).
+  - [x] Initial Vitest test suite (+0.2 pts bonus).
+  - [x] Professional `README.md` with installation commands and architecture summary.
+
+## Phase 9: Unified Batch Launcher & Standalone GitHub Pages (`v8.1.0`)
+- **Focus**: Developer onboarding convenience and standalone web deployment.
+- **Deliverables**:
+  - [x] Combined batch launcher script `start-project.bat` starting `json-server` and static web server in parallel.
+  - [x] Standalone `live-demo` branch with in-memory mock REST data repository for GitHub Pages deployment.
+
+## Phase 10: Advanced Bonus Features Milestone (`v9.0.0`)
+- **Focus**: Complete all 5 bonus challenges (+1.5 extra points).
+- **Deliverables**:
+  - [x] **Task 10.1: Hashtags & Tag Filter (`v8.2.0`)**: `#tag` extraction with 6 deterministic color themes and toolbar filter dropdown (+0.3 pt).
+  - [x] **Task 10.2: Subtasks / Checklist (`v8.3.0`)**: Dynamic checklist in detail modal with immediate `PATCH` persistence, progress bar tracker, and card badges (+0.3 pt).
+  - [x] **Task 10.3: User Management & Card Assignment (`v8.4.0`)**: User registration (`POST /users`), assignee selector, and card avatar badges (+0.5 pt).
+  - [x] **Task 10.4: Dynamic Columns Management (`v8.5.0`)**: Create custom columns (`+ Añadir Columna`), rename inline, delete with task relocation (+0.2 pt).
+  - [x] Expanded Vitest test suite to 79 tests (100% pass) covering all bonus features (+0.2 pt).
+
+## Phase 11: Full-Screen Fluid Responsive Adaptation (`v10.0.0`)
+- **Focus**: Complete responsive layout across desktop, tablet, and mobile.
+- **Deliverables**:
+  - [x] **Task 11.1: Fluid Full-Width & Full-Height Board Layout (`v9.1.0`)**: Removed `max-width: 1400px` bottlenecks, full viewport height (`100vh` / `100dvh`), independent card list scroll.
+  - [x] **Task 11.2: Dynamic Column Sizing & Overflow Protection (`v9.2.0`)**: `clamp(290px, 21vw, 360px)` column flex basis, overflow protection for "+ Añadir Columna".
+  - [x] **Task 11.3: Responsive Toolbar & Tablet Adaptation (`v9.3.0`)**: Flex wrap toolbar, compact metrics, responsive dialogs (`min(92vw, 520px)`).
+  - [x] **Task 11.4: Mobile Optimization & Snap Scrolling (`v9.4.0`)**: Mobile horizontal snap scrolling (`scroll-snap-type: x mandatory`), stacked buttons on small viewports.
+
+## Hotfix v10.0.1: Mobile Spacing & Bottts Neutral Avatars (`v10.0.1`)
+- **Focus**: Bugfix for mobile toolbar vertical spacing and avatar theme update.
+- **Deliverables**:
+  - [x] Removed 240px vertical empty space in mobile toolbar caused by `flex-basis: 240px` on `.search-box`.
+  - [x] Suppressed browser native search cancel button (`::-webkit-search-cancel-button`) to eliminate duplicate 'x' buttons.
+  - [x] Switched avatar generation to DiceBear **Bottts Neutral** robot style across data and UI.
+  - [x] Added cache-busting query parameter `?v=10.0.1` in `index.html`.
 
