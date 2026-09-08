@@ -1,10 +1,12 @@
 {
   "name": "tablero-kanban",
-  "version": "8.0.0",
+  "version": "8.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "server": "json-server ./data/data.json --port 3000",
+    "serve": "serve . -l 5000",
+    "dev": "serve . -l 5000",
     "test": "vitest run"
   },
   "keywords": [],
@@ -15,6 +17,7 @@
     "sortablejs": "^1.15.7"
   },
   "devDependencies": {
+    "serve": "^14.2.6",
     "vitest": "^5.0.0"
   }
 }
