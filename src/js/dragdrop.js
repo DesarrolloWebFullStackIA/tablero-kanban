@@ -22,12 +22,50 @@ export const defaultSortableOptions = {
   touchStartThreshold: 5,
 };
 
+/**
+ * Normalizes and extracts structured payload from a SortableJS onEnd event
+ * @param {Object} evt - Raw SortableJS onEnd event
+ * @returns {Object|null} Parsed drag event payload or null if invalid
+ */
+export function parseDragEvent(evt) {
+  if (!evt || !evt.item) return null;
+
+  const cardElement = evt.item;
+  const taskId = cardElement.dataset.id;
+  if (!taskId) return null;
+
+  const fromContainer = evt.from;
+  const toContainer = evt.to;
+
+  const fromStatus = fromContainer?.dataset?.status || 'todo';
+  const toStatus = toContainer?.dataset?.status || 'todo';
+
+  const oldIndex = typeof evt.oldIndex === 'number' ? evt.oldIndex : -1;
+  const newIndex = typeof evt.newIndex === 'number' ? evt.newIndex : -1;
+
+  const isCrossColumn = fromStatus !== toStatus;
+  const hasPositionChanged = isCrossColumn || oldIndex !== newIndex;
+
+  return {
+    taskId,
+    item: cardElement,
+    fromStatus,
+    toStatus,
+    fromContainer,
+    toContainer,
+    oldIndex,
+    newIndex,
+    isCrossColumn,
+    hasPositionChanged,
+  };
+}
+
 /** @type {Array<any>} */
 let sortableInstances = [];
 
 /**
  * Initializes SortableJS instances across all 3 Kanban column card lists
- * @param {Function} [onEndCallback] - Callback invoked when a card is dropped
+ * @param {Function} [onEndCallback] - Callback receiving (parsedPayload, rawEvent)
  * @param {Object} [customOptions] - Optional configuration overrides
  * @returns {Array<any>} List of active SortableJS instances
  */
@@ -51,8 +89,9 @@ export function initDragAndDrop(onEndCallback = null, customOptions = {}) {
       ...defaultSortableOptions,
       ...customOptions,
       onEnd: (event) => {
+        const payload = parseDragEvent(event);
         if (typeof onEndCallback === 'function') {
-          onEndCallback(event);
+          onEndCallback(payload, event);
         }
       },
     };
@@ -88,5 +127,6 @@ export default {
   initDragAndDrop,
   destroyDragAndDrop,
   getSortableInstances,
+  parseDragEvent,
   defaultSortableOptions,
 };
