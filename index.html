@@ -1,13 +1,565 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tablero Kanban ATTL</title>
+    <meta name="description" content="Tablero Kanban interactivo con gestión de tareas, drag & drop y persistencia REST." />
+    <title>Tablero Kanban</title>
+    <link rel="stylesheet" href="./src/css/index.css" />
+    <script type="module" src="./src/js/index.js"></script>
   </head>
   <body>
-    <main>
-        
+    <!-- App Header & Quick Statistics Dashboard -->
+    <header class="app-header" role="banner">
+      <div class="header-container">
+        <div class="header-brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <rect x="7" y="7" width="3" height="9"></rect>
+              <rect x="14" y="7" width="3" height="5"></rect>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 class="brand-title">Tablero Kanban</h1>
+            <span class="brand-subtitle">Gestión Ágil de Tareas</span>
+          </div>
+        </div>
+
+        <!-- Quick Statistics Panel -->
+        <section class="metrics-dashboard" aria-label="Panel de estadísticas rápidas">
+          <div class="metric-pill metric-pill--todo" title="Tareas por hacer">
+            <span class="metric-indicator" aria-hidden="true"></span>
+            <span class="metric-label">Por Hacer:</span>
+            <strong class="metric-value" id="metric-todo-count" aria-live="polite">0</strong>
+          </div>
+          <div class="metric-pill metric-pill--doing" title="Tareas en proceso">
+            <span class="metric-indicator" aria-hidden="true"></span>
+            <span class="metric-label">En Proceso:</span>
+            <strong class="metric-value" id="metric-doing-count" aria-live="polite">0</strong>
+          </div>
+          <div class="metric-pill metric-pill--done" title="Tareas finalizadas">
+            <span class="metric-indicator" aria-hidden="true"></span>
+            <span class="metric-label">Finalizado:</span>
+            <strong class="metric-value" id="metric-done-count" aria-live="polite">0</strong>
+          </div>
+          <div class="metric-pill metric-pill--total" title="Total de tareas">
+            <span class="metric-label">Total:</span>
+            <strong class="metric-value" id="metric-total-count" aria-live="polite">0</strong>
+          </div>
+        </section>
+
+        <!-- Header Actions: Theme toggle, Add Task & Hamburger Menu -->
+        <div class="header-actions">
+          <button
+            type="button"
+            class="btn-theme-toggle"
+            id="theme-toggle"
+            aria-label="Cambiar a modo oscuro"
+            title="Cambiar tema claro/oscuro"
+          >
+            <svg class="theme-icon theme-icon--sun" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="theme-icon theme-icon--moon" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="btn btn--primary"
+            id="btn-open-create-task"
+            aria-haspopup="dialog"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Nueva Tarea</span>
+          </button>
+
+          <!-- Mobile Hamburger Toggle Button -->
+          <button
+            type="button"
+            class="hamburger-btn"
+            id="hamburger-btn"
+            aria-expanded="false"
+            aria-controls="mobile-nav"
+            aria-label="Abrir menú de navegación móvil"
+          >
+            <span class="hamburger-line" aria-hidden="true"></span>
+            <span class="hamburger-line" aria-hidden="true"></span>
+            <span class="hamburger-line" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Mobile Navigation Drawer & Backdrop -->
+    <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" aria-hidden="true"></div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="Menú principal móvil" hidden>
+      <div class="mobile-nav-header">
+        <span class="mobile-nav-title">Navegación</span>
+        <button
+          type="button"
+          class="btn-close-mobile-nav"
+          id="btn-close-mobile-nav"
+          aria-label="Cerrar menú de navegación móvil"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <ul class="mobile-nav-links">
+        <li>
+          <a href="#board-container" class="mobile-nav-item active">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <rect x="7" y="7" width="3" height="9"></rect>
+              <rect x="14" y="7" width="3" height="5"></rect>
+            </svg>
+            <span>Tablero de Tareas</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="mobile-nav-actions">
+        <button
+          type="button"
+          class="btn btn--primary btn--full"
+          id="mobile-btn-open-create-task"
+          aria-haspopup="dialog"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Nueva Tarea</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Toolbar: Search & Filters -->
+    <div class="toolbar-wrapper">
+      <section class="toolbar" aria-label="Herramientas de búsqueda y filtrado">
+        <!-- Search Input -->
+        <div class="search-box">
+          <label for="search-input" class="visually-hidden">Buscar tareas por título</label>
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="search"
+              id="search-input"
+              class="form-input search-input"
+              placeholder="Buscar por título..."
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              id="btn-clear-search"
+              class="btn-clear-search"
+              aria-label="Limpiar búsqueda"
+              hidden
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+          <div class="filter-group">
+            <label for="filter-priority" class="filter-label">Prioridad:</label>
+            <div class="select-wrapper">
+              <select id="filter-priority" class="form-select filter-select" aria-label="Filtrar por prioridad">
+                <option value="all">Todas</option>
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="btn-reset-filters"
+            class="btn btn--secondary btn-reset"
+            aria-label="Restablecer filtros"
+            title="Restablecer todos los filtros"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span>Restablecer</span>
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <main class="board-container" id="board-container" role="main" aria-label="Tablero Kanban de Tareas">
+      <div class="board-grid">
+        <!-- Column 1: Por Hacer (todo) -->
+        <section class="kanban-column kanban-column--todo" id="column-todo" data-status="todo" aria-labelledby="heading-col-todo">
+          <header class="column-header">
+            <div class="column-title-wrapper">
+              <span class="column-indicator column-indicator--todo" aria-hidden="true"></span>
+              <h2 class="column-title" id="heading-col-todo">Por Hacer</h2>
+              <span class="column-counter" id="counter-todo" aria-label="0 tareas en Por Hacer">0</span>
+            </div>
+            <button
+              type="button"
+              class="btn-column-add"
+              data-column="todo"
+              aria-label="Añadir tarea a Por Hacer"
+              title="Añadir tarea aquí"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </header>
+
+          <div
+            class="kanban-cards-list"
+            id="cards-todo"
+            data-status="todo"
+            role="region"
+            aria-label="Lista de tareas por hacer"
+          >
+            <!-- Empty Placeholder -->
+            <div class="column-empty-state" id="empty-todo" aria-hidden="false">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="9" x2="15" y2="9"></line>
+                <line x1="9" y1="13" x2="15" y2="13"></line>
+                <line x1="9" y1="17" x2="11" y2="17"></line>
+              </svg>
+              <p class="empty-state-text">Sin tareas pendientes</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Column 2: En Proceso (doing) -->
+        <section class="kanban-column kanban-column--doing" id="column-doing" data-status="doing" aria-labelledby="heading-col-doing">
+          <header class="column-header">
+            <div class="column-title-wrapper">
+              <span class="column-indicator column-indicator--doing" aria-hidden="true"></span>
+              <h2 class="column-title" id="heading-col-doing">En Proceso</h2>
+              <span class="column-counter" id="counter-doing" aria-label="0 tareas en En Proceso">0</span>
+            </div>
+            <button
+              type="button"
+              class="btn-column-add"
+              data-column="doing"
+              aria-label="Añadir tarea a En Proceso"
+              title="Añadir tarea aquí"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </header>
+
+          <div
+            class="kanban-cards-list"
+            id="cards-doing"
+            data-status="doing"
+            role="region"
+            aria-label="Lista de tareas en proceso"
+          >
+            <!-- Empty Placeholder -->
+            <div class="column-empty-state" id="empty-doing" aria-hidden="false">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              <p class="empty-state-text">No hay tareas en progreso</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Column 3: Finalizado (done) -->
+        <section class="kanban-column kanban-column--done" id="column-done" data-status="done" aria-labelledby="heading-col-done">
+          <header class="column-header">
+            <div class="column-title-wrapper">
+              <span class="column-indicator column-indicator--done" aria-hidden="true"></span>
+              <h2 class="column-title" id="heading-col-done">Finalizado</h2>
+              <span class="column-counter" id="counter-done" aria-label="0 tareas finalizadas">0</span>
+            </div>
+            <button
+              type="button"
+              class="btn-column-add"
+              data-column="done"
+              aria-label="Añadir tarea a Finalizado"
+              title="Añadir tarea aquí"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
+          </header>
+
+          <div
+            class="kanban-cards-list"
+            id="cards-done"
+            data-status="done"
+            role="region"
+            aria-label="Lista de tareas finalizadas"
+          >
+            <!-- Empty Placeholder -->
+            <div class="column-empty-state" id="empty-done" aria-hidden="false">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <p class="empty-state-text">No hay tareas completadas aún</p>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
+
+    <!-- Dialog 1: Create Task Modal -->
+    <dialog id="create-task-dialog" class="app-dialog" aria-labelledby="dialog-create-title">
+      <div class="dialog-content">
+        <header class="dialog-header">
+          <div class="dialog-title-wrapper">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14"></path>
+            </svg>
+            <h2 id="dialog-create-title" class="dialog-title">Crear Nueva Tarea</h2>
+          </div>
+          <button type="button" class="btn-dialog-close" id="btn-close-create-dialog" aria-label="Cerrar modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </header>
+
+        <form id="form-create-task" class="dialog-form" novalidate>
+          <div class="form-field">
+            <label for="create-task-title" class="form-label">
+              Título <span class="required-indicator" aria-hidden="true">*</span>
+            </label>
+            <input
+              type="text"
+              id="create-task-title"
+              name="title"
+              class="form-input"
+              placeholder="Ej. Diseñar maqueta en Figma"
+              required
+              maxlength="100"
+              autocomplete="off"
+            />
+            <span class="form-error" id="error-create-title" aria-live="polite"></span>
+          </div>
+
+          <div class="form-field">
+            <label for="create-task-desc" class="form-label">Descripción</label>
+            <textarea
+              id="create-task-desc"
+              name="description"
+              class="form-textarea"
+              rows="3"
+              placeholder="Describe detalladamente los objetivos de la tarea..."
+              maxlength="500"
+            ></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-field form-field--half">
+              <label for="create-task-priority" class="form-label">
+                Prioridad <span class="required-indicator" aria-hidden="true">*</span>
+              </label>
+              <select id="create-task-priority" name="priority" class="form-select" required>
+                <option value="Media" selected>Media</option>
+                <option value="Alta">Alta</option>
+                <option value="Baja">Baja</option>
+              </select>
+            </div>
+
+            <div class="form-field form-field--half">
+              <label for="create-task-due-date" class="form-label">
+                Fecha Límite <span class="required-indicator" aria-hidden="true">*</span>
+              </label>
+              <input
+                type="date"
+                id="create-task-due-date"
+                name="dueDate"
+                class="form-input"
+                required
+              />
+              <span class="form-error" id="error-create-date" aria-live="polite"></span>
+            </div>
+          </div>
+
+          <input type="hidden" id="create-task-status" name="status" value="todo" />
+
+          <footer class="dialog-footer">
+            <button type="button" class="btn btn--secondary" id="btn-cancel-create-dialog">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn--primary" id="btn-submit-create-task">
+              Crear Tarea
+            </button>
+          </footer>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Dialog 2: Task Detail & Comments Modal -->
+    <dialog id="task-detail-dialog" class="app-dialog app-dialog--wide" aria-labelledby="detail-task-title-input">
+      <div class="dialog-content">
+        <header class="dialog-header">
+          <div class="dialog-badges-bar">
+            <span class="badge-priority" id="detail-priority-badge">Prioridad</span>
+            <span class="badge-status" id="detail-status-badge">Estado</span>
+            <span class="badge-date" id="detail-date-badge">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="8" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span id="detail-due-date-text">Fecha límite</span>
+            </span>
+          </div>
+          <button type="button" class="btn-dialog-close" id="btn-close-detail-dialog" aria-label="Cerrar detalle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </header>
+
+        <div class="dialog-body">
+          <!-- Editable Task Details Form -->
+          <form id="form-edit-task" class="detail-edit-form" novalidate>
+            <input type="hidden" id="detail-task-id" />
+
+            <div class="form-field">
+              <label for="detail-task-title-input" class="form-label">Título de la Tarea</label>
+              <input
+                type="text"
+                id="detail-task-title-input"
+                name="title"
+                class="form-input form-input--title"
+                required
+                maxlength="100"
+              />
+            </div>
+
+            <div class="form-field">
+              <label for="detail-task-desc-input" class="form-label">Descripción</label>
+              <textarea
+                id="detail-task-desc-input"
+                name="description"
+                class="form-textarea"
+                rows="4"
+                placeholder="Añadir una descripción más detallada..."
+              ></textarea>
+            </div>
+
+            <div class="detail-actions-bar">
+              <button type="submit" class="btn btn--primary" id="btn-save-task-edits">
+                Guardar Cambios
+              </button>
+              <button type="button" class="btn btn--danger" id="btn-delete-task" aria-label="Eliminar tarea permanentemente">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span>Eliminar Tarea</span>
+              </button>
+            </div>
+          </form>
+
+          <hr class="dialog-divider" />
+
+          <!-- Comments Section -->
+          <section class="comments-section" aria-label="Comentarios de la tarea">
+            <h3 class="comments-heading">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>Comentarios</span>
+              <span class="comments-count" id="detail-comments-count">(0)</span>
+            </h3>
+
+            <!-- Existing Comments Feed -->
+            <div class="comments-list" id="detail-comments-list" role="feed" aria-busy="false">
+              <!-- Dynamically populated comments -->
+            </div>
+
+            <!-- Add Comment Form -->
+            <form id="form-add-comment" class="comment-form" novalidate>
+              <div class="form-field">
+                <label for="comment-author" class="form-label">Tu Nombre</label>
+                <input
+                  type="text"
+                  id="comment-author"
+                  name="author"
+                  class="form-input"
+                  placeholder="Ej. Ana Gómez"
+                  required
+                  maxlength="50"
+                  autocomplete="name"
+                />
+              </div>
+
+              <div class="form-field">
+                <label for="comment-text" class="form-label">Comentario</label>
+                <textarea
+                  id="comment-text"
+                  name="text"
+                  class="form-textarea"
+                  rows="2"
+                  placeholder="Escribe un comentario o actualización..."
+                  required
+                  maxlength="300"
+                ></textarea>
+              </div>
+
+              <div class="comment-form-actions">
+                <button type="submit" class="btn btn--secondary" id="btn-submit-comment">
+                  Añadir Comentario
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Toast Notification Container for Accessible Alerts -->
+    <div
+      id="toast-container"
+      class="toast-container"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
   </body>
 </html>
