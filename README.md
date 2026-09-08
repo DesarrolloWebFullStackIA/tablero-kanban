@@ -1,7 +1,8 @@
 # Tablero Kanban | Trello-style Project & Task Manager
 
-[![Semantic Versioning](https://img.shields.io/badge/version-v8.0.0-blue.svg)](https://semver.org)
-[![Vitest Unit Tests](https://img.shields.io/badge/vitest-25%2F25%20passing-brightgreen.svg)](https://vitest.dev)
+[![Semantic Versioning](https://img.shields.io/badge/version-v10.0.1-blue.svg)](https://semver.org)
+[![Vitest Unit Tests](https://img.shields.io/badge/vitest-79%2F79%20passing-brightgreen.svg)](https://vitest.dev)
+[![Live Demo](https://img.shields.io/badge/demo-GitHub%20Pages-success.svg)](https://desarrollowebfullstackia.github.io/tablero-kanban/)
 [![JavaScript](https://img.shields.io/badge/javascript-ES6%2B%20Modules-yellow.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![CSS3](https://img.shields.io/badge/styling-CSS3%20BEM-1572B6.svg)](https://developer.mozilla.org/en-US/docs/Web/CSS)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellowgreen.svg)](https://conventionalcommits.org)
@@ -42,6 +43,13 @@ A production-grade, highly accessible Kanban board web application designed for 
 - **Light & Dark Theme Engine**: High-contrast, WCAG AA compliant color palette with persistent `localStorage` and system `prefers-color-scheme` detection.
 - **Responsive Layout**: Adapts gracefully across desktop (3-column grid), tablet (compact grid), and mobile (single-column stack with slide-over drawer menu).
 - **Toast Notification Service**: Non-intrusive, auto-dismissing accessible notifications (`success`, `error`, `info`).
+
+### 🚀 Advanced Bonus Features (+1.5 Extra Points)
+- **👤 User Management & Assignment (+0.5 pt)**: Registered users (`POST /users`), Bottts Neutral robot avatars, card assignee selector, and avatar badges on cards.
+- **🏷️ Tags & Advanced Filters (+0.3 pt)**: Hashtag `#tag` extraction with 6 deterministic color themes and toolbar tag filter dropdown.
+- **🔄 Subtasks & Checklists (+0.3 pt)**: Interactive checklist in task detail modal with immediate `PATCH` persistence, progress bar tracker, and card badges.
+- **📋 Dynamic Columns (+0.2 pt)**: Create custom columns from the UI (*+ Añadir Columna*), rename inline, delete with automatic task relocation, and SortableJS dropzones.
+- **🧪 Automated Unit Testing (+0.2 pt)**: 79 comprehensive unit tests in Vitest covering all core business logic, store reactions, and utilities.
 
 ---
 
