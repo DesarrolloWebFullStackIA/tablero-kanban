@@ -259,3 +259,92 @@ export function updateColumnState(status, count = null) {
   }
 }
 
+/**
+ * Formats a comment timestamp into localized Spanish date and time
+ * @param {string} dateStr - ISO date string
+ * @returns {string} Formatted date and time
+ */
+export function formatCommentDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
+
+    return new Intl.DateTimeFormat('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    }).format(date);
+  } catch {
+    return dateStr;
+  }
+}
+
+/**
+ * Renders a list of comments into the task detail comments feed
+ * @param {HTMLElement} container - Comments list container (#detail-comments-list)
+ * @param {Array<Object>} comments - Array of comment objects
+ * @param {HTMLElement} [countEl] - Comments count badge (#detail-comments-count)
+ */
+export function renderComments(container, comments = [], countEl = null) {
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (countEl) {
+    countEl.textContent = `(${comments.length})`;
+  }
+
+  if (!comments || comments.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-comments-text';
+    empty.style.color = 'var(--color-text-subtle)';
+    empty.style.fontSize = 'var(--font-size-xs)';
+    empty.style.fontStyle = 'italic';
+    empty.textContent = 'No hay comentarios todavía. ¡Sé el primero en comentar!';
+    container.appendChild(empty);
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const c of comments) {
+    const item = document.createElement('div');
+    item.className = 'comment-item';
+    item.dataset.commentId = String(c.id);
+
+    const formattedDate = formatCommentDate(c.createdAt);
+
+    item.innerHTML = `
+      <div class="comment-header">
+        <span class="comment-author">${escapeHtml(c.author || 'Anónimo')}</span>
+        <span class="comment-date">${escapeHtml(formattedDate)}</span>
+      </div>
+      <p class="comment-text">${escapeHtml(c.text || '')}</p>
+    `;
+
+    fragment.appendChild(item);
+  }
+
+  container.appendChild(fragment);
+}
+
+/**
+ * Updates the comment counter badge on a specific task card in the board
+ * @param {string|number} taskId - Task identifier
+ * @param {number} count - New comment count
+ */
+export function updateCardCommentsCount(taskId, count) {
+  const card = document.querySelector(`.kanban-card[data-id="${taskId}"]`);
+  if (!card) return;
+  const commentsBadge = card.querySelector('.card-meta-comments');
+  if (commentsBadge) {
+    commentsBadge.title = `${count} comentarios`;
+    const countSpan = commentsBadge.querySelector('span');
+    if (countSpan) {
+      countSpan.textContent = String(count);
+    }
+  }
+}
+
+
+

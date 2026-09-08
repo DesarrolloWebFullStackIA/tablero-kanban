@@ -6,7 +6,7 @@
 import api from './api.js';
 import store from './store.js';
 import { showToast } from './utils.js';
-import { formatDate, isTaskOverdue } from './ui.js';
+import { formatDate, isTaskOverdue, renderComments } from './ui.js';
 
 /**
  * Initializes the Create Task modal dialog and form handlers
@@ -264,7 +264,7 @@ export function getStatusLabel(status) {
  * Opens and populates the Task Detail modal dialog
  * @param {string|number} taskId - ID of the task to view
  */
-export function openTaskDetailModal(taskId) {
+export async function openTaskDetailModal(taskId) {
   const dialog = document.getElementById('task-detail-dialog');
   const task = store.getTaskById(taskId);
   if (!dialog || !task) return;
@@ -305,7 +305,42 @@ export function openTaskDetailModal(taskId) {
   if (titleInput) titleInput.value = task.title || '';
   if (descInput) descInput.value = task.description || '';
 
+  // Reset add comment form
+  const addCommentForm = document.getElementById('form-add-comment');
+  if (addCommentForm) {
+    addCommentForm.reset();
+  }
+
+  // Comments feed setup
+  const commentsList = document.getElementById('detail-comments-list');
+  const commentsCount = document.getElementById('detail-comments-count');
+
+  // Render cached comments immediately
+  const cachedComments = store.getCommentsForTask(taskId);
+  renderComments(commentsList, cachedComments, commentsCount);
+
   dialog.showModal();
+
+  // Fetch fresh comments from server
+  try {
+    if (commentsList) {
+      commentsList.setAttribute('aria-busy', 'true');
+    }
+    const comments = await api.getCommentsByTaskId(taskId);
+    store.setCommentsForTask(taskId, comments);
+
+    // If dialog is still showing this task, update rendered comments
+    if (String(store.activeTaskId) === String(taskId)) {
+      renderComments(commentsList, comments, commentsCount);
+    }
+  } catch (err) {
+    console.error('Error al cargar comentarios:', err);
+    showToast('Error al cargar comentarios de la tarea.', 'error');
+  } finally {
+    if (commentsList) {
+      commentsList.setAttribute('aria-busy', 'false');
+    }
+  }
 }
 
 /**
