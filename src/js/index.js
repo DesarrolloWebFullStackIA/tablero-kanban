@@ -174,11 +174,47 @@ export async function initApp() {
   initCreateTaskModal();
   initTaskDeletion();
 
-  // Initialize Drag and Drop between columns
-  initDragAndDrop((payload) => {
+  // Initialize Drag and Drop between columns with optimistic UI & rollback
+  initDragAndDrop(async (payload) => {
     if (!payload || !payload.hasPositionChanged) return;
+
     if (payload.isCrossColumn) {
+      // 1. Optimistic UI update in store (triggers subscriber to recount & update metrics)
       store.moveTask(payload.taskId, payload.toStatus);
+
+      // 2. Persist to server via PATCH /tasks/:id
+      try {
+        await api.updateTask(payload.taskId, { status: payload.toStatus });
+      } catch (err) {
+        console.error('Error al sincronizar movimiento de tarea con el servidor:', err);
+
+        // 3. Rollback in store
+        store.moveTask(payload.taskId, payload.fromStatus);
+
+        // 4. Rollback in DOM: restore card to its original column and index
+        if (payload.item && payload.fromContainer) {
+          const cardsInFrom = Array.from(
+            payload.fromContainer.querySelectorAll('.kanban-card')
+          ).filter((c) => c !== payload.item);
+
+          if (cardsInFrom[payload.oldIndex]) {
+            payload.fromContainer.insertBefore(payload.item, cardsInFrom[payload.oldIndex]);
+          } else {
+            payload.fromContainer.appendChild(payload.item);
+          }
+        }
+
+        // 5. Update column counters and empty states
+        updateColumnState(payload.fromStatus);
+        updateColumnState(payload.toStatus);
+
+        // 6. Alert user of synchronization failure
+        showToast(
+          'Error de conexión con el servidor. Se canceló y revirtió el movimiento de la tarea.',
+          'error',
+          5000
+        );
+      }
     }
   });
 
