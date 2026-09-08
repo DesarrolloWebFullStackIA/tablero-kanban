@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tablero Kanban - Main Application Entry Point
  * Orchestrates initialization, state store, UI updates, and theme handling
  */
@@ -7,6 +7,7 @@ import api from './api.js';
 import store from './store.js';
 import { renderBoard, updateMetricsUI } from './ui.js';
 import { showToast } from './utils.js';
+import { initCreateTaskModal } from './modal.js';
 
 /**
  * 1. Theme Management (Light / Dark mode)
@@ -169,6 +170,7 @@ export async function initApp() {
   initTheme();
   initMobileNav();
   initFilters();
+  initCreateTaskModal();
 
   // Reactive UI update whenever state changes
   store.subscribe(({ event, payload, state }) => {
