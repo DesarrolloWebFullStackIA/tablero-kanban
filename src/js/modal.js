@@ -47,6 +47,7 @@ export function initCreateTaskModal() {
   const openModal = (defaultStatus = 'todo') => {
     form.reset();
     clearErrors();
+    populateColumnStatusDropdowns();
 
     if (statusInput) {
       statusInput.value = defaultStatus;
@@ -80,14 +81,17 @@ export function initCreateTaskModal() {
     openBtnMobile.addEventListener('click', () => openModal('todo'));
   }
 
-  // Column header "+" buttons
-  const columnAddButtons = document.querySelectorAll('.btn-column-add');
-  columnAddButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const colStatus = btn.dataset.column || 'todo';
-      openModal(colStatus);
+  // Column header "+" buttons using event delegation on board container
+  const boardContainer = document.getElementById('board-container');
+  if (boardContainer) {
+    boardContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-column-add');
+      if (btn) {
+        const colStatus = btn.dataset.column || 'todo';
+        openModal(colStatus);
+      }
     });
-  });
+  }
 
   // Close triggers
   if (closeBtn) {
@@ -257,11 +261,42 @@ export function initTaskDeletion() {
 }
 
 /**
+ * Populates all column/status select elements across modals with active columns
+ */
+export function populateColumnStatusDropdowns() {
+  const columns = store.getColumns();
+  const selects = [
+    document.getElementById('create-task-status'),
+    document.getElementById('detail-task-status'),
+  ];
+
+  selects.forEach((select) => {
+    if (!select || select.tagName !== 'SELECT') return;
+    const currentValue = select.value;
+    select.innerHTML = '';
+    columns.forEach((col) => {
+      const option = document.createElement('option');
+      option.value = col.id;
+      option.textContent = col.title;
+      select.appendChild(option);
+    });
+    if (currentValue && columns.some((c) => String(c.id) === String(currentValue))) {
+      select.value = currentValue;
+    } else if (columns[0]) {
+      select.value = columns[0].id;
+    }
+  });
+}
+
+/**
  * Maps task status key to human-readable Spanish label
- * @param {string} status - 'todo' | 'doing' | 'done'
+ * @param {string} status - 'todo' | 'doing' | 'done' or custom column ID
  * @returns {string}
  */
 export function getStatusLabel(status) {
+  const col = store.getColumnById(status);
+  if (col) return col.title;
+
   switch (status) {
     case 'todo':
       return 'Por Hacer';
@@ -508,7 +543,13 @@ export async function openTaskDetailModal(taskId) {
     }
   }
 
-  // Populate assignee select
+  // Populate status & assignee selects
+  populateColumnStatusDropdowns();
+  const detailStatusSelect = document.getElementById('detail-task-status');
+  if (detailStatusSelect) {
+    detailStatusSelect.value = task.status || 'todo';
+  }
+
   const detailAssigneeSelect = document.getElementById('detail-task-assignee');
   if (detailAssigneeSelect) {
     detailAssigneeSelect.value = task.assigneeId || (task.assignee?.id) || '';
@@ -646,19 +687,36 @@ export function initTaskDetailModal() {
         return;
       }
 
+      const statusSelect = document.getElementById('detail-task-status');
+      const currentTask = store.getTaskById(taskId);
+      const newStatus = statusSelect?.value || currentTask?.status || 'todo';
+      const statusChanged = currentTask && String(currentTask.status) !== String(newStatus);
+
       try {
         if (saveBtn) {
           saveBtn.disabled = true;
           saveBtn.textContent = 'Guardando...';
         }
 
-        const updatedTask = await api.updateTask(taskId, {
+        const payloadToUpdate = {
           title: newTitle,
           description: newDesc,
           tags: newTags,
           assigneeId: newAssigneeId,
           assignee: newAssignee,
-        });
+          ...(statusChanged ? { status: newStatus } : {}),
+        };
+
+        const updatedTask = await api.updateTask(taskId, payloadToUpdate);
+
+        if (statusChanged) {
+          store.moveTask(taskId, newStatus);
+          const statusBadge = document.getElementById('detail-status-badge');
+          if (statusBadge) {
+            statusBadge.textContent = getStatusLabel(newStatus);
+            statusBadge.className = `badge-status badge-status--${newStatus}`;
+          }
+        }
 
         // Update central reactive store
         store.updateTask(taskId, {
@@ -667,6 +725,7 @@ export function initTaskDetailModal() {
           tags: updatedTask.tags || newTags,
           assigneeId: updatedTask.assigneeId ?? newAssigneeId,
           assignee: updatedTask.assignee ?? newAssignee,
+          ...(statusChanged ? { status: newStatus } : {}),
         });
 
         // Update tags preview chips in dialog

@@ -53,11 +53,16 @@ export function showToast(message, type = 'info', duration = 4000) {
 
   toast.innerHTML = `
     ${iconSvg}
-    <span class="toast-message">${message}</span>
+    <span class="toast-message"></span>
     <button type="button" class="toast-close" aria-label="Cerrar notificación" title="Cerrar">
       ${closeIcon}
     </button>
   `;
+
+  const msgSpan = toast.querySelector('.toast-message');
+  if (msgSpan) {
+    msgSpan.textContent = String(message ?? '');
+  }
 
   const dismiss = () => {
     toast.style.opacity = '0';

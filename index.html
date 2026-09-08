@@ -257,27 +257,40 @@
     </div>
 
     <main class="board-container" id="board-container" role="main" aria-label="Tablero Kanban de Tareas">
-      <div class="board-grid">
+      <div class="board-grid" id="board-grid">
         <!-- Column 1: Por Hacer (todo) -->
         <section class="kanban-column kanban-column--todo" id="column-todo" data-status="todo" aria-labelledby="heading-col-todo">
           <header class="column-header">
-            <div class="column-title-wrapper">
+            <div class="column-title-wrapper" data-column="todo">
               <span class="column-indicator column-indicator--todo" aria-hidden="true"></span>
-              <h2 class="column-title" id="heading-col-todo">Por Hacer</h2>
+              <h2 class="column-title" id="heading-col-todo" data-column="todo" title="Doble clic para editar">Por Hacer</h2>
+              <button
+                type="button"
+                class="btn-edit-column-title"
+                data-column="todo"
+                aria-label="Editar título de columna Por Hacer"
+                title="Editar título"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
+              </button>
               <span class="column-counter" id="counter-todo" aria-label="0 tareas en Por Hacer">0</span>
             </div>
-            <button
-              type="button"
-              class="btn-column-add"
-              data-column="todo"
-              aria-label="Añadir tarea a Por Hacer"
-              title="Añadir tarea aquí"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
+            <div class="column-header-actions">
+              <button
+                type="button"
+                class="btn-column-add"
+                data-column="todo"
+                aria-label="Añadir tarea a Por Hacer"
+                title="Añadir tarea aquí"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </div>
           </header>
 
           <div
@@ -303,23 +316,36 @@
         <!-- Column 2: En Proceso (doing) -->
         <section class="kanban-column kanban-column--doing" id="column-doing" data-status="doing" aria-labelledby="heading-col-doing">
           <header class="column-header">
-            <div class="column-title-wrapper">
+            <div class="column-title-wrapper" data-column="doing">
               <span class="column-indicator column-indicator--doing" aria-hidden="true"></span>
-              <h2 class="column-title" id="heading-col-doing">En Proceso</h2>
+              <h2 class="column-title" id="heading-col-doing" data-column="doing" title="Doble clic para editar">En Proceso</h2>
+              <button
+                type="button"
+                class="btn-edit-column-title"
+                data-column="doing"
+                aria-label="Editar título de columna En Proceso"
+                title="Editar título"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
+              </button>
               <span class="column-counter" id="counter-doing" aria-label="0 tareas en En Proceso">0</span>
             </div>
-            <button
-              type="button"
-              class="btn-column-add"
-              data-column="doing"
-              aria-label="Añadir tarea a En Proceso"
-              title="Añadir tarea aquí"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
+            <div class="column-header-actions">
+              <button
+                type="button"
+                class="btn-column-add"
+                data-column="doing"
+                aria-label="Añadir tarea a En Proceso"
+                title="Añadir tarea aquí"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </div>
           </header>
 
           <div
@@ -343,23 +369,36 @@
         <!-- Column 3: Finalizado (done) -->
         <section class="kanban-column kanban-column--done" id="column-done" data-status="done" aria-labelledby="heading-col-done">
           <header class="column-header">
-            <div class="column-title-wrapper">
+            <div class="column-title-wrapper" data-column="done">
               <span class="column-indicator column-indicator--done" aria-hidden="true"></span>
-              <h2 class="column-title" id="heading-col-done">Finalizado</h2>
+              <h2 class="column-title" id="heading-col-done" data-column="done" title="Doble clic para editar">Finalizado</h2>
+              <button
+                type="button"
+                class="btn-edit-column-title"
+                data-column="done"
+                aria-label="Editar título de columna Finalizado"
+                title="Editar título"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
+              </button>
               <span class="column-counter" id="counter-done" aria-label="0 tareas finalizadas">0</span>
             </div>
-            <button
-              type="button"
-              class="btn-column-add"
-              data-column="done"
-              aria-label="Añadir tarea a Finalizado"
-              title="Añadir tarea aquí"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
+            <div class="column-header-actions">
+              <button
+                type="button"
+                class="btn-column-add"
+                data-column="done"
+                aria-label="Añadir tarea a Finalizado"
+                title="Añadir tarea aquí"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </div>
           </header>
 
           <div
@@ -379,6 +418,39 @@
             </div>
           </div>
         </section>
+
+        <!-- Add Column Action Card -->
+        <div class="add-column-wrapper" id="add-column-wrapper">
+          <button type="button" class="btn-add-column" id="btn-add-column" aria-label="Añadir nueva columna">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>+ Añadir Columna</span>
+          </button>
+          <form class="add-column-form" id="add-column-form" hidden novalidate>
+            <input
+              type="text"
+              class="form-input add-column-input"
+              id="add-column-input"
+              placeholder="Título de la columna..."
+              maxlength="50"
+              autocomplete="off"
+              aria-label="Título de la nueva columna"
+            />
+            <div class="add-column-actions">
+              <button type="submit" class="btn btn--primary btn--sm" id="btn-confirm-add-column">
+                Añadir Columna
+              </button>
+              <button type="button" class="btn btn--secondary btn--sm btn-cancel-add-column" id="btn-cancel-add-column" aria-label="Cancelar">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </main>
 
@@ -479,7 +551,16 @@
           </div>
           <span class="form-hint">Separa las etiquetas con espacios o comas.</span>
 
-          <input type="hidden" id="create-task-status" name="status" value="todo" />
+          <div class="form-field">
+            <label for="create-task-status" class="form-label">
+              Columna / Estado <span class="required-indicator" aria-hidden="true">*</span>
+            </label>
+            <select id="create-task-status" name="status" class="form-select" required>
+              <option value="todo">Por Hacer</option>
+              <option value="doing">En Proceso</option>
+              <option value="done">Finalizado</option>
+            </select>
+          </div>
 
           <footer class="dialog-footer">
             <button type="button" class="btn btn--secondary" id="btn-cancel-create-dialog">
@@ -546,11 +627,22 @@
               ></textarea>
             </div>
 
-            <div class="form-field">
-              <label for="detail-task-assignee" class="form-label">Responsable Asignado</label>
-              <select id="detail-task-assignee" name="assigneeId" class="form-select">
-                <option value="">Sin asignar</option>
-              </select>
+            <div class="form-row">
+              <div class="form-field form-field--half">
+                <label for="detail-task-status" class="form-label">Columna / Estado</label>
+                <select id="detail-task-status" name="status" class="form-select">
+                  <option value="todo">Por Hacer</option>
+                  <option value="doing">En Proceso</option>
+                  <option value="done">Finalizado</option>
+                </select>
+              </div>
+
+              <div class="form-field form-field--half">
+                <label for="detail-task-assignee" class="form-label">Responsable Asignado</label>
+                <select id="detail-task-assignee" name="assigneeId" class="form-select">
+                  <option value="">Sin asignar</option>
+                </select>
+              </div>
             </div>
 
             <div class="form-field">
