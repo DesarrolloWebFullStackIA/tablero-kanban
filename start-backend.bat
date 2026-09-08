@@ -1,1 +1,1 @@
-npx json-server ./data/data.json
+npx json-server ./data/data.json --port 3000
