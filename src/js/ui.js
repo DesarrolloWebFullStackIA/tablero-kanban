@@ -1,0 +1,235 @@
+﻿/**
+ * Tablero Kanban - Dynamic UI Rendering & DOM Management
+ * Handles rendering of cards, columns, empty states, and metrics dashboard
+ */
+
+/**
+ * Escapes HTML entities to prevent XSS vulnerabilities
+ * @param {string} str - Raw string
+ * @returns {string} Sanitized string
+ */
+export function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Formats a date string (YYYY-MM-DD or ISO) into a localized readable date
+ * @param {string} dateStr - Date string
+ * @returns {string} Formatted date (e.g., "15 mar 2026" or "15/03/2026")
+ */
+export function formatDate(dateStr) {
+  if (!dateStr) return 'Sin fecha';
+  try {
+    const [year, month, day] = dateStr.split('T')[0].split('-').map(Number);
+    if (!year || !month || !day) return dateStr;
+    const date = new Date(year, month - 1, day);
+    if (isNaN(date.getTime())) return dateStr;
+
+    return new Intl.DateTimeFormat('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }).format(date);
+  } catch {
+    return dateStr;
+  }
+}
+
+/**
+ * Determines whether a task is overdue based on its due date and status
+ * @param {string} dueDate - Due date string (YYYY-MM-DD)
+ * @param {string} status - Current task status ('todo' | 'doing' | 'done')
+ * @returns {boolean} True if overdue and not completed
+ */
+export function isTaskOverdue(dueDate, status) {
+  if (!dueDate || status === 'done') return false;
+
+  const [year, month, day] = dueDate.split('T')[0].split('-').map(Number);
+  if (!year || !month || !day) return false;
+
+  const targetDate = new Date(year, month - 1, day, 23, 59, 59, 999);
+  const now = new Date();
+  return targetDate.getTime() < now.getTime();
+}
+
+/**
+ * Creates a DOM HTMLElement for a single Kanban task card
+ * @param {Object} task - Task object
+ * @param {number} [commentsCount=0] - Number of comments for this task
+ * @returns {HTMLElement} The card element (<article class="kanban-card">)
+ */
+export function createCardElement(task, commentsCount = 0) {
+  const card = document.createElement('article');
+  card.className = 'kanban-card';
+  card.dataset.id = String(task.id);
+  card.tabIndex = 0;
+  card.setAttribute('role', 'article');
+  card.setAttribute('aria-label', task.title || 'Tarjeta de tarea');
+
+  const overdue = isTaskOverdue(task.dueDate, task.status);
+  const formattedDueDate = formatDate(task.dueDate);
+  const priority = task.priority || 'Media';
+
+  // SVG Icons
+  const trashIcon = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <polyline points="3 6 5 6 21 6"></polyline>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    </svg>`;
+
+  const calendarIcon = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>`;
+
+  const commentsIcon = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+    </svg>`;
+
+  const descHtml = task.description
+    ? `<p class="card-desc">${escapeHtml(task.description)}</p>`
+    : '';
+
+  const commentsBadgeHtml = commentsCount > 0
+    ? `<span class="card-comments-badge" title="${commentsCount} comentario${commentsCount > 1 ? 's' : ''}">
+        ${commentsIcon}
+        <span>${commentsCount}</span>
+       </span>`
+    : '';
+
+  card.innerHTML = `
+    <header class="card-header">
+      <span class="badge-priority badge-priority--${escapeHtml(priority)}">${escapeHtml(priority)}</span>
+      <button
+        type="button"
+        class="btn-card-delete"
+        data-id="${escapeHtml(String(task.id))}"
+        aria-label="Eliminar tarea: ${escapeHtml(task.title)}"
+        title="Eliminar tarea"
+      >
+        ${trashIcon}
+      </button>
+    </header>
+
+    <h3 class="card-title">${escapeHtml(task.title)}</h3>
+    ${descHtml}
+
+    <footer class="card-footer">
+      <span
+        class="card-due-date ${overdue ? 'is-overdue' : ''}"
+        title="${overdue ? 'Tarea vencida' : 'Fecha de entrega: ' + formattedDueDate}"
+      >
+        ${calendarIcon}
+        <span>${formattedDueDate}</span>
+      </span>
+      ${commentsBadgeHtml}
+    </footer>
+  `;
+
+  return card;
+}
+
+/**
+ * Renders a list of task cards into a column dropzone container
+ * Preserves the empty placeholder element while replacing any prior cards
+ * @param {HTMLElement} container - Column dropzone element (e.g. #cards-todo)
+ * @param {Array<Object>} tasks - Tasks assigned to this column
+ * @param {Map<string, Array<object>>|Function} [getCommentsCount] - Function or comments count lookup
+ */
+export function renderCards(container, tasks = [], getCommentsCount = null) {
+  if (!container) return;
+
+  // Remove existing cards
+  const existingCards = container.querySelectorAll('.kanban-card');
+  existingCards.forEach((card) => card.remove());
+
+  // Find empty state placeholder
+  const emptyState = container.querySelector('.column-empty-state');
+  if (emptyState) {
+    emptyState.setAttribute('aria-hidden', tasks.length > 0 ? 'true' : 'false');
+  }
+
+  // Create fragment and append cards
+  const fragment = document.createDocumentFragment();
+  for (const task of tasks) {
+    let count = 0;
+    if (typeof getCommentsCount === 'function') {
+      count = getCommentsCount(task.id);
+    } else if (getCommentsCount && typeof getCommentsCount.get === 'function') {
+      const cached = getCommentsCount.get(String(task.id));
+      count = Array.isArray(cached) ? cached.length : 0;
+    }
+    fragment.appendChild(createCardElement(task, count));
+  }
+
+  container.appendChild(fragment);
+
+  // Update corresponding column counter
+  const status = container.dataset.status;
+  if (status) {
+    const counterEl = document.getElementById(`counter-${status}`);
+    if (counterEl) {
+      counterEl.textContent = String(tasks.length);
+      const label = status === 'todo' ? 'en Por Hacer' : status === 'doing' ? 'en En Proceso' : 'finalizadas';
+      counterEl.setAttribute('aria-label', `${tasks.length} tareas ${label}`);
+    }
+  }
+}
+
+/**
+ * Renders all 3 Kanban columns from a complete or filtered tasks array
+ * @param {Array<Object>} tasks - Complete or filtered tasks
+ * @param {Map<string, Array<object>>|Function} [getCommentsCount] - Comments count provider
+ */
+export function renderBoard(tasks = [], getCommentsCount = null) {
+  const columns = {
+    todo: [],
+    doing: [],
+    done: [],
+  };
+
+  for (const task of tasks) {
+    if (columns[task.status]) {
+      columns[task.status].push(task);
+    } else {
+      // Default fallback if status is missing or invalid
+      columns.todo.push(task);
+    }
+  }
+
+  const todoContainer = document.getElementById('cards-todo');
+  const doingContainer = document.getElementById('cards-doing');
+  const doneContainer = document.getElementById('cards-done');
+
+  if (todoContainer) renderCards(todoContainer, columns.todo, getCommentsCount);
+  if (doingContainer) renderCards(doingContainer, columns.doing, getCommentsCount);
+  if (doneContainer) renderCards(doneContainer, columns.done, getCommentsCount);
+}
+
+/**
+ * Updates the header statistics dashboard metrics and column indicators
+ * @param {{ todo: number, doing: number, done: number, total: number }} metrics
+ */
+export function updateMetricsUI(metrics) {
+  if (!metrics) return;
+
+  const todoVal = document.getElementById('metric-todo-count');
+  const doingVal = document.getElementById('metric-doing-count');
+  const doneVal = document.getElementById('metric-done-count');
+  const totalVal = document.getElementById('metric-total-count');
+
+  if (todoVal) todoVal.textContent = String(metrics.todo ?? 0);
+  if (doingVal) doingVal.textContent = String(metrics.doing ?? 0);
+  if (doneVal) doneVal.textContent = String(metrics.done ?? 0);
+  if (totalVal) totalVal.textContent = String(metrics.total ?? 0);
+}
