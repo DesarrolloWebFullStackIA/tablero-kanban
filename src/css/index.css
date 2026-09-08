@@ -826,6 +826,13 @@ a {
   padding: 0 var(--space-sm);
   font-size: var(--font-size-xs);
   white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.btn-reset.btn-reset--active {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: var(--color-primary-focus);
 }
 
 /* Toolbar responsive overrides */
