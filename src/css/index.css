@@ -670,3 +670,186 @@ a {
   }
 }
 
+/* --------------------------------------------------------------------------
+   7. Toolbar, Search & Filter Controls
+   -------------------------------------------------------------------------- */
+.toolbar-wrapper {
+  max-width: 1400px;
+  width: 100%;
+  margin: var(--space-md) auto 0;
+  padding: 0 var(--space-md);
+}
+
+.toolbar {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  transition: background-color var(--transition-normal), border-color var(--transition-normal);
+}
+
+/* Search Box */
+.search-box {
+  flex: 1;
+  max-width: 420px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-sm);
+  color: var(--color-text-subtle);
+  pointer-events: none;
+  transition: color var(--transition-fast);
+}
+
+.search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 2rem 0 2.25rem;
+  background-color: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.search-input::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-focus);
+}
+
+.search-input:focus + .search-icon,
+.search-input-wrapper:focus-within .search-icon {
+  color: var(--color-primary);
+}
+
+.btn-clear-search {
+  position: absolute;
+  right: var(--space-xs);
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-subtle);
+  transition: all var(--transition-fast);
+}
+
+.btn-clear-search:hover {
+  background-color: var(--color-bg-muted);
+  color: var(--color-text-main);
+}
+
+/* Filter Controls */
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-shrink: 0;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.filter-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.select-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.form-select {
+  height: 38px;
+  padding: 0 2rem 0 var(--space-sm);
+  background-color: var(--color-bg-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-main);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  transition: all var(--transition-fast);
+}
+
+.form-select:hover {
+  border-color: var(--color-border-hover);
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-focus);
+}
+
+.btn-reset {
+  height: 38px;
+  padding: 0 var(--space-sm);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+/* Toolbar responsive overrides */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+
+  .filter-controls {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .filter-group {
+    flex: 1;
+  }
+
+  .select-wrapper {
+    width: 100%;
+  }
+
+  .form-select {
+    width: 100%;
+  }
+}
+
+
