@@ -253,6 +253,12 @@ export async function initApp() {
       return;
     }
 
+    if (event === 'COMMENT_REMOVED' && payload) {
+      const count = store.getCommentsForTask(payload.taskId).length;
+      updateCardCommentsCount(payload.taskId, count);
+      return;
+    }
+
     if (event === 'ACTIVE_TASK_CHANGED') {
       return;
     }

@@ -1520,7 +1520,40 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-xs);
   margin-bottom: 4px;
+}
+
+.comment-header-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.btn-comment-delete {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-subtle);
+  background-color: transparent;
+  border: none;
+  opacity: 0.4;
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--transition-fast);
+}
+
+.comment-item:hover .btn-comment-delete,
+.btn-comment-delete:focus-visible {
+  opacity: 1;
+}
+
+.btn-comment-delete:hover {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
 }
 
 .comment-author {

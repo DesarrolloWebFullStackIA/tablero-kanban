@@ -275,6 +275,24 @@ class Store {
     this.notify('COMMENT_ADDED', comment);
   }
 
+  /**
+   * Remove a comment from cache
+   * @param {string|number} commentId
+   * @param {string|number} taskId
+   * @returns {object|null} Deleted comment or null
+   */
+  removeComment(commentId, taskId) {
+    const tId = String(taskId);
+    const existing = this.commentsMap.get(tId) || [];
+    const index = existing.findIndex((c) => String(c.id) === String(commentId));
+    if (index === -1) return null;
+
+    const [removed] = existing.splice(index, 1);
+    this.commentsMap.set(tId, existing);
+    this.notify('COMMENT_REMOVED', { commentId: String(commentId), taskId: tId, comment: removed });
+    return removed;
+  }
+
   // ------------------------------------------------------------------------
   // Active Task Inspection
   // ------------------------------------------------------------------------

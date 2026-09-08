@@ -526,6 +526,42 @@ export function initTaskDetailModal() {
       }
     });
   }
+
+  // Handle Comment Deletion
+  const commentsListContainer = document.getElementById('detail-comments-list');
+  if (commentsListContainer) {
+    commentsListContainer.addEventListener('click', async (e) => {
+      const deleteBtn = e.target.closest('.btn-comment-delete');
+      if (!deleteBtn) return;
+
+      e.stopPropagation();
+      const commentId = deleteBtn.dataset.commentId;
+      const taskId = idInput?.value || store.activeTaskId;
+      if (!commentId || !taskId) return;
+
+      const confirmed = window.confirm('¿Deseas eliminar este comentario permanentemente?');
+      if (!confirmed) return;
+
+      try {
+        deleteBtn.disabled = true;
+        await api.deleteComment(commentId);
+
+        // Remove from state store (emits COMMENT_REMOVED, updating the board card badge)
+        store.removeComment(commentId, taskId);
+
+        // Re-render comments list and count in modal
+        const taskComments = store.getCommentsForTask(taskId);
+        const commentsCount = document.getElementById('detail-comments-count');
+        renderComments(commentsListContainer, taskComments, commentsCount);
+
+        showToast('Comentario eliminado', 'info');
+      } catch (err) {
+        console.error('Error al eliminar comentario:', err);
+        showToast('Error al eliminar comentario. Verifica la conexión con el servidor.', 'error', 5000);
+        deleteBtn.disabled = false;
+      }
+    });
+  }
 }
 
 
