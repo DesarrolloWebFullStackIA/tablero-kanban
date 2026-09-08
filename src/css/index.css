@@ -1051,5 +1051,182 @@ a {
   }
 }
 
+/* --------------------------------------------------------------------------
+   9. Task Card Components, Badges & Drag States
+   -------------------------------------------------------------------------- */
+.kanban-card {
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-xs);
+  cursor: grab;
+  user-select: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  position: relative;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-hover);
+}
+
+.kanban-card:active {
+  cursor: grabbing;
+}
+
+/* Card Header (Priority & Actions) */
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+/* Priority Badges */
+.badge-priority {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-full);
+  line-height: 1.2;
+  border: 1px solid transparent;
+}
+
+.badge-priority--Alta {
+  background-color: var(--color-priority-high-bg);
+  color: var(--color-priority-high);
+  border-color: var(--color-priority-high-border);
+}
+
+.badge-priority--Media {
+  background-color: var(--color-priority-medium-bg);
+  color: var(--color-priority-medium);
+  border-color: var(--color-priority-medium-border);
+}
+
+.badge-priority--Baja {
+  background-color: var(--color-priority-low-bg);
+  color: var(--color-priority-low);
+  border-color: var(--color-priority-low-border);
+}
+
+/* Quick Delete Button */
+.btn-card-delete {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-subtle);
+  opacity: 0.4;
+  transition: all var(--transition-fast);
+}
+
+.kanban-card:hover .btn-card-delete,
+.btn-card-delete:focus-visible {
+  opacity: 1;
+}
+
+.btn-card-delete:hover {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+/* Card Title */
+.card-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-main);
+  line-height: var(--line-height-tight);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 2px 0;
+}
+
+/* Card Description Excerpt */
+.card-desc {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Card Footer (Due Date & Comments Count) */
+.card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: var(--space-xs);
+  margin-top: var(--space-xs);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
+.card-due-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
+  transition: all var(--transition-fast);
+}
+
+.card-due-date.is-overdue {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-weight: var(--font-weight-semibold);
+}
+
+.card-comments-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--color-text-subtle);
+  font-weight: var(--font-weight-medium);
+}
+
+.card-comments-badge svg {
+  opacity: 0.8;
+}
+
+/* SortableJS Visual States */
+.sortable-ghost {
+  opacity: 0.35 !important;
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  border: 2px dashed var(--color-primary) !important;
+  box-shadow: none !important;
+}
+
+.sortable-chosen {
+  opacity: 0.95;
+  border-color: var(--color-primary);
+}
+
+.sortable-drag {
+  cursor: grabbing !important;
+  box-shadow: var(--shadow-card-drag) !important;
+  transform: rotate(2deg) scale(1.02);
+  background-color: var(--color-bg-card);
+  border-color: var(--color-primary);
+  z-index: 1000 !important;
+}
+
+
 
 
