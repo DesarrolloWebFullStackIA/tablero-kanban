@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tablero Kanban - Dynamic UI Rendering & DOM Management
  * Handles rendering of cards, columns, empty states, and metrics dashboard
  */
@@ -233,3 +233,29 @@ export function updateMetricsUI(metrics) {
   if (doneVal) doneVal.textContent = String(metrics.done ?? 0);
   if (totalVal) totalVal.textContent = String(metrics.total ?? 0);
 }
+
+/**
+ * Updates an individual column counter element and empty state visibility
+ * @param {string} status - Column status ('todo' | 'doing' | 'done')
+ * @param {number} [count=null] - Optional explicit count; if null, counts .kanban-card in DOM
+ */
+export function updateColumnState(status, count = null) {
+  const container = document.getElementById(`cards-${status}`);
+  const counter = document.getElementById(`counter-${status}`);
+  if (!container) return;
+
+  const cards = container.querySelectorAll('.kanban-card');
+  const actualCount = count !== null ? count : cards.length;
+
+  if (counter) {
+    counter.textContent = String(actualCount);
+    const label = status === 'todo' ? 'en Por Hacer' : status === 'doing' ? 'en En Proceso' : 'finalizadas';
+    counter.setAttribute('aria-label', `${actualCount} tareas ${label}`);
+  }
+
+  const emptyState = container.querySelector('.column-empty-state');
+  if (emptyState) {
+    emptyState.setAttribute('aria-hidden', actualCount > 0 ? 'true' : 'false');
+  }
+}
+

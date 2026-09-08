@@ -1012,6 +1012,7 @@ a {
   gap: var(--space-xs);
   margin: auto 0;
   transition: all var(--transition-fast);
+  pointer-events: none;
 }
 
 .column-empty-state svg {
