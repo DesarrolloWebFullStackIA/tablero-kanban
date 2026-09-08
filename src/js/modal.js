@@ -5,8 +5,8 @@
 
 import api from './api.js';
 import store from './store.js';
-import { showToast } from './utils.js';
-import { formatDate, isTaskOverdue, renderComments } from './ui.js';
+import { showToast, parseTags, getTagColorIndex } from './utils.js';
+import { formatDate, isTaskOverdue, renderComments, updateCardChecklistBadge, escapeHtml } from './ui.js';
 
 /**
  * Initializes the Create Task modal dialog and form handlers
@@ -25,6 +25,8 @@ export function initCreateTaskModal() {
   const descInput = document.getElementById('create-task-desc');
   const prioritySelect = document.getElementById('create-task-priority');
   const dueDateInput = document.getElementById('create-task-due-date');
+  const tagsInput = document.getElementById('create-task-tags');
+  const assigneeSelect = document.getElementById('create-task-assignee');
   const statusInput = document.getElementById('create-task-status');
 
   // Error validation containers
@@ -45,12 +47,19 @@ export function initCreateTaskModal() {
   const openModal = (defaultStatus = 'todo') => {
     form.reset();
     clearErrors();
+    populateColumnStatusDropdowns();
 
     if (statusInput) {
       statusInput.value = defaultStatus;
     }
     if (prioritySelect) {
       prioritySelect.value = 'Media';
+    }
+    if (tagsInput) {
+      tagsInput.value = '';
+    }
+    if (assigneeSelect) {
+      assigneeSelect.value = '';
     }
 
     dialog.showModal();
@@ -72,14 +81,17 @@ export function initCreateTaskModal() {
     openBtnMobile.addEventListener('click', () => openModal('todo'));
   }
 
-  // Column header "+" buttons
-  const columnAddButtons = document.querySelectorAll('.btn-column-add');
-  columnAddButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const colStatus = btn.dataset.column || 'todo';
-      openModal(colStatus);
+  // Column header "+" buttons using event delegation on board container
+  const boardContainer = document.getElementById('board-container');
+  if (boardContainer) {
+    boardContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.btn-column-add');
+      if (btn) {
+        const colStatus = btn.dataset.column || 'todo';
+        openModal(colStatus);
+      }
     });
-  });
+  }
 
   // Close triggers
   if (closeBtn) {
@@ -127,6 +139,9 @@ export function initCreateTaskModal() {
     const priority = prioritySelect?.value || 'Media';
     const dueDate = dueDateInput?.value || '';
     const status = statusInput?.value || 'todo';
+    const tags = parseTags(tagsInput?.value || '');
+    const assigneeId = assigneeSelect?.value || null;
+    const assignee = assigneeId ? store.getUserById(assigneeId) : null;
 
     let isValid = true;
 
@@ -160,6 +175,9 @@ export function initCreateTaskModal() {
         priority,
         dueDate,
         status,
+        tags,
+        assigneeId,
+        assignee,
       });
 
       store.addTask(newTask);
@@ -243,11 +261,42 @@ export function initTaskDeletion() {
 }
 
 /**
+ * Populates all column/status select elements across modals with active columns
+ */
+export function populateColumnStatusDropdowns() {
+  const columns = store.getColumns();
+  const selects = [
+    document.getElementById('create-task-status'),
+    document.getElementById('detail-task-status'),
+  ];
+
+  selects.forEach((select) => {
+    if (!select || select.tagName !== 'SELECT') return;
+    const currentValue = select.value;
+    select.innerHTML = '';
+    columns.forEach((col) => {
+      const option = document.createElement('option');
+      option.value = col.id;
+      option.textContent = col.title;
+      select.appendChild(option);
+    });
+    if (currentValue && columns.some((c) => String(c.id) === String(currentValue))) {
+      select.value = currentValue;
+    } else if (columns[0]) {
+      select.value = columns[0].id;
+    }
+  });
+}
+
+/**
  * Maps task status key to human-readable Spanish label
- * @param {string} status - 'todo' | 'doing' | 'done'
+ * @param {string} status - 'todo' | 'doing' | 'done' or custom column ID
  * @returns {string}
  */
 export function getStatusLabel(status) {
+  const col = store.getColumnById(status);
+  if (col) return col.title;
+
   switch (status) {
     case 'todo':
       return 'Por Hacer';
@@ -257,6 +306,179 @@ export function getStatusLabel(status) {
       return 'Finalizado';
     default:
       return status || 'Por Hacer';
+  }
+}
+
+/**
+ * Renders the checklist items, progress bar, and counters for the specified task
+ * @param {string|number} taskId
+ */
+export function renderChecklist(taskId) {
+  const container = document.getElementById('detail-checklist-items');
+  const countEl = document.getElementById('detail-checklist-count');
+  const progressEl = document.getElementById('detail-checklist-progress');
+  const percentageEl = document.getElementById('detail-checklist-percentage');
+
+  if (!container) return;
+
+  const task = store.getTaskById(taskId);
+  const checklist = task && Array.isArray(task.checklist) ? task.checklist : [];
+
+  const total = checklist.length;
+  const completed = checklist.filter((item) => item.completed).length;
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  if (countEl) countEl.textContent = `(${completed}/${total})`;
+  if (percentageEl) percentageEl.textContent = `${percent}%`;
+  if (progressEl) {
+    progressEl.style.width = `${percent}%`;
+    const track = progressEl.closest('.checklist-progress-bar-track');
+    if (track) track.setAttribute('aria-valuenow', String(percent));
+  }
+
+  container.innerHTML = '';
+
+  if (total === 0) {
+    const emptyLi = document.createElement('li');
+    emptyLi.className = 'checklist-empty-state';
+    emptyLi.textContent = 'No hay subtareas añadidas. ¡Añade la primera abajo!';
+    container.appendChild(emptyLi);
+    return;
+  }
+
+  for (const item of checklist) {
+    const li = document.createElement('li');
+    li.className = 'checklist-item';
+    li.dataset.subtaskId = String(item.id);
+
+    li.innerHTML = `
+      <label class="checklist-item-label">
+        <input
+          type="checkbox"
+          class="checklist-item-checkbox"
+          data-subtask-id="${escapeHtml(String(item.id))}"
+          ${item.completed ? 'checked' : ''}
+          aria-label="Completar subtarea: ${escapeHtml(item.text)}"
+        />
+        <span class="checklist-item-text ${item.completed ? 'is-completed' : ''}">${escapeHtml(item.text)}</span>
+      </label>
+      <button
+        type="button"
+        class="btn-delete-subtask"
+        data-subtask-id="${escapeHtml(String(item.id))}"
+        aria-label="Eliminar subtarea: ${escapeHtml(item.text)}"
+        title="Eliminar subtarea"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    `;
+    container.appendChild(li);
+  }
+}
+
+/**
+ * Toggles a subtask completion status and persists with PATCH
+ * @param {string|number} taskId
+ * @param {string} subtaskId
+ */
+export async function toggleSubtask(taskId, subtaskId) {
+  const task = store.getTaskById(taskId);
+  if (!task || !Array.isArray(task.checklist)) return;
+
+  const previousChecklist = [...task.checklist];
+  const updatedChecklist = task.checklist.map((item) =>
+    String(item.id) === String(subtaskId)
+      ? { ...item, completed: !item.completed }
+      : item
+  );
+
+  // Optimistic update
+  store.updateTask(taskId, { checklist: updatedChecklist });
+  renderChecklist(taskId);
+  updateCardChecklistBadge(taskId, updatedChecklist);
+
+  try {
+    await api.updateTask(taskId, { checklist: updatedChecklist });
+  } catch (err) {
+    console.error('Error al actualizar subtarea en el servidor:', err);
+    store.updateTask(taskId, { checklist: previousChecklist });
+    renderChecklist(taskId);
+    updateCardChecklistBadge(taskId, previousChecklist);
+    showToast('Error al actualizar subtarea. Se restableció el estado.', 'error');
+  }
+}
+
+/**
+ * Adds a new subtask to task checklist and persists with PATCH
+ * @param {string|number} taskId
+ * @param {string} text
+ */
+export async function addSubtask(taskId, text) {
+  const cleanText = (text || '').trim();
+  if (!cleanText) return;
+
+  const task = store.getTaskById(taskId);
+  if (!task) return;
+
+  const currentChecklist = Array.isArray(task.checklist) ? [...task.checklist] : [];
+  const newItem = {
+    id: `chk_${Date.now()}`,
+    text: cleanText,
+    completed: false,
+  };
+  const updatedChecklist = [...currentChecklist, newItem];
+
+  // Optimistic update
+  store.updateTask(taskId, { checklist: updatedChecklist });
+  renderChecklist(taskId);
+  updateCardChecklistBadge(taskId, updatedChecklist);
+
+  const input = document.getElementById('input-new-subtask');
+  if (input) input.value = '';
+
+  try {
+    await api.updateTask(taskId, { checklist: updatedChecklist });
+    showToast('Subtarea añadida', 'success', 2000);
+  } catch (err) {
+    console.error('Error al añadir subtarea:', err);
+    store.updateTask(taskId, { checklist: currentChecklist });
+    renderChecklist(taskId);
+    updateCardChecklistBadge(taskId, currentChecklist);
+    showToast('Error al guardar subtarea en el servidor.', 'error');
+  }
+}
+
+/**
+ * Deletes a subtask from task checklist and persists with PATCH
+ * @param {string|number} taskId
+ * @param {string} subtaskId
+ */
+export async function deleteSubtask(taskId, subtaskId) {
+  const task = store.getTaskById(taskId);
+  if (!task || !Array.isArray(task.checklist)) return;
+
+  const previousChecklist = [...task.checklist];
+  const updatedChecklist = task.checklist.filter(
+    (item) => String(item.id) !== String(subtaskId)
+  );
+
+  // Optimistic update
+  store.updateTask(taskId, { checklist: updatedChecklist });
+  renderChecklist(taskId);
+  updateCardChecklistBadge(taskId, updatedChecklist);
+
+  try {
+    await api.updateTask(taskId, { checklist: updatedChecklist });
+    showToast('Subtarea eliminada', 'info', 2000);
+  } catch (err) {
+    console.error('Error al eliminar subtarea:', err);
+    store.updateTask(taskId, { checklist: previousChecklist });
+    renderChecklist(taskId);
+    updateCardChecklistBadge(taskId, previousChecklist);
+    showToast('Error al eliminar subtarea en el servidor.', 'error');
   }
 }
 
@@ -300,10 +522,45 @@ export async function openTaskDetailModal(taskId) {
   const idInput = document.getElementById('detail-task-id');
   const titleInput = document.getElementById('detail-task-title-input');
   const descInput = document.getElementById('detail-task-desc-input');
+  const tagsInput = document.getElementById('detail-task-tags-input');
+  const tagsChips = document.getElementById('detail-tags-chips');
 
   if (idInput) idInput.value = String(task.id);
   if (titleInput) titleInput.value = task.title || '';
   if (descInput) descInput.value = task.description || '';
+  if (tagsInput) tagsInput.value = (task.tags || []).join(' ');
+
+  if (tagsChips) {
+    if (task.tags && task.tags.length > 0) {
+      tagsChips.innerHTML = task.tags
+        .map((t) => {
+          const idx = getTagColorIndex(t, 6);
+          return `<span class="tag-chip tag-chip--color-${idx}">${t}</span>`;
+        })
+        .join('');
+    } else {
+      tagsChips.innerHTML = '<span class="detail-tags-empty">Sin etiquetas</span>';
+    }
+  }
+
+  // Populate status & assignee selects
+  populateColumnStatusDropdowns();
+  const detailStatusSelect = document.getElementById('detail-task-status');
+  if (detailStatusSelect) {
+    detailStatusSelect.value = task.status || 'todo';
+  }
+
+  const detailAssigneeSelect = document.getElementById('detail-task-assignee');
+  if (detailAssigneeSelect) {
+    detailAssigneeSelect.value = task.assigneeId || (task.assignee?.id) || '';
+  }
+
+  // Populate checklist
+  renderChecklist(taskId);
+  const newSubtaskInput = document.getElementById('input-new-subtask');
+  if (newSubtaskInput) {
+    newSubtaskInput.value = '';
+  }
 
   // Reset add comment form
   const addCommentForm = document.getElementById('form-add-comment');
@@ -379,8 +636,8 @@ export function initTaskDetailModal() {
   const boardContainer = document.getElementById('board-container');
   if (boardContainer) {
     boardContainer.addEventListener('click', (e) => {
-      // Ignore click on quick delete button
-      if (e.target.closest('.btn-card-delete')) return;
+      // Ignore click on quick delete button or tag chip
+      if (e.target.closest('.btn-card-delete') || e.target.closest('.tag-chip')) return;
 
       const card = e.target.closest('.kanban-card');
       if (card && card.dataset.id) {
@@ -391,7 +648,7 @@ export function initTaskDetailModal() {
     // Keyboard accessibility: Enter or Space on focused card
     boardContainer.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
-        if (e.target.closest('.btn-card-delete')) return;
+        if (e.target.closest('.btn-card-delete') || e.target.closest('.tag-chip')) return;
         const card = e.target.closest('.kanban-card');
         if (card && card.dataset.id) {
           e.preventDefault();
@@ -406,6 +663,9 @@ export function initTaskDetailModal() {
   const idInput = document.getElementById('detail-task-id');
   const titleInput = document.getElementById('detail-task-title-input');
   const descInput = document.getElementById('detail-task-desc-input');
+  const tagsInput = document.getElementById('detail-task-tags-input');
+  const assigneeSelect = document.getElementById('detail-task-assignee');
+  const tagsChips = document.getElementById('detail-tags-chips');
   const saveBtn = document.getElementById('btn-save-task-edits');
 
   if (editForm) {
@@ -417,6 +677,9 @@ export function initTaskDetailModal() {
 
       const newTitle = (titleInput?.value || '').trim();
       const newDesc = (descInput?.value || '').trim();
+      const newTags = parseTags(tagsInput?.value || '');
+      const newAssigneeId = assigneeSelect?.value || null;
+      const newAssignee = newAssigneeId ? store.getUserById(newAssigneeId) : null;
 
       if (!newTitle || newTitle.length < 3) {
         showToast('El título debe tener al menos 3 caracteres.', 'error');
@@ -424,22 +687,60 @@ export function initTaskDetailModal() {
         return;
       }
 
+      const statusSelect = document.getElementById('detail-task-status');
+      const currentTask = store.getTaskById(taskId);
+      const newStatus = statusSelect?.value || currentTask?.status || 'todo';
+      const statusChanged = currentTask && String(currentTask.status) !== String(newStatus);
+
       try {
         if (saveBtn) {
           saveBtn.disabled = true;
           saveBtn.textContent = 'Guardando...';
         }
 
-        const updatedTask = await api.updateTask(taskId, {
+        const payloadToUpdate = {
           title: newTitle,
           description: newDesc,
-        });
+          tags: newTags,
+          assigneeId: newAssigneeId,
+          assignee: newAssignee,
+          ...(statusChanged ? { status: newStatus } : {}),
+        };
+
+        const updatedTask = await api.updateTask(taskId, payloadToUpdate);
+
+        if (statusChanged) {
+          store.moveTask(taskId, newStatus);
+          const statusBadge = document.getElementById('detail-status-badge');
+          if (statusBadge) {
+            statusBadge.textContent = getStatusLabel(newStatus);
+            statusBadge.className = `badge-status badge-status--${newStatus}`;
+          }
+        }
 
         // Update central reactive store
         store.updateTask(taskId, {
           title: updatedTask.title || newTitle,
           description: updatedTask.description ?? newDesc,
+          tags: updatedTask.tags || newTags,
+          assigneeId: updatedTask.assigneeId ?? newAssigneeId,
+          assignee: updatedTask.assignee ?? newAssignee,
+          ...(statusChanged ? { status: newStatus } : {}),
         });
+
+        // Update tags preview chips in dialog
+        if (tagsChips) {
+          if (newTags.length > 0) {
+            tagsChips.innerHTML = newTags
+              .map((t) => {
+                const idx = getTagColorIndex(t, 6);
+                return `<span class="tag-chip tag-chip--color-${idx}">${t}</span>`;
+              })
+              .join('');
+          } else {
+            tagsChips.innerHTML = '<span class="detail-tags-empty">Sin etiquetas</span>';
+          }
+        }
 
         showToast('Cambios guardados correctamente', 'success');
       } catch (err) {
@@ -450,6 +751,57 @@ export function initTaskDetailModal() {
           saveBtn.disabled = false;
           saveBtn.textContent = 'Guardar Cambios';
         }
+      }
+    });
+  }
+
+  // Handle Checklist Interactions: toggle checkbox & delete subtask
+  const checklistContainer = document.getElementById('detail-checklist-items');
+  if (checklistContainer) {
+    checklistContainer.addEventListener('change', (e) => {
+      const checkbox = e.target.closest('.checklist-item-checkbox');
+      if (checkbox) {
+        const subtaskId = checkbox.dataset.subtaskId;
+        const taskId = idInput?.value || store.activeTaskId;
+        if (taskId && subtaskId) {
+          toggleSubtask(taskId, subtaskId);
+        }
+      }
+    });
+
+    checklistContainer.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.btn-delete-subtask');
+      if (deleteBtn) {
+        e.stopPropagation();
+        const subtaskId = deleteBtn.dataset.subtaskId;
+        const taskId = idInput?.value || store.activeTaskId;
+        if (taskId && subtaskId) {
+          deleteSubtask(taskId, subtaskId);
+        }
+      }
+    });
+  }
+
+  // Handle Add Subtask
+  const newSubtaskInput = document.getElementById('input-new-subtask');
+  const addSubtaskBtn = document.getElementById('btn-add-subtask');
+
+  const handleAddSubtask = () => {
+    const taskId = idInput?.value || store.activeTaskId;
+    if (taskId && newSubtaskInput) {
+      addSubtask(taskId, newSubtaskInput.value);
+    }
+  };
+
+  if (addSubtaskBtn) {
+    addSubtaskBtn.addEventListener('click', handleAddSubtask);
+  }
+
+  if (newSubtaskInput) {
+    newSubtaskInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAddSubtask();
       }
     });
   }
@@ -563,5 +915,187 @@ export function initTaskDetailModal() {
     });
   }
 }
+
+/**
+ * Populates all assignee select elements across modals with current store users
+ */
+export function populateAssigneeDropdowns() {
+  const users = store.getUsers();
+  const selects = [
+    document.getElementById('create-task-assignee'),
+    document.getElementById('detail-task-assignee'),
+  ];
+
+  selects.forEach((select) => {
+    if (!select) return;
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">Sin asignar</option>';
+    users.forEach((u) => {
+      const option = document.createElement('option');
+      option.value = String(u.id);
+      option.textContent = `${u.name}${u.role ? ` (${u.role})` : ''}`;
+      select.appendChild(option);
+    });
+    if (currentValue) {
+      select.value = currentValue;
+    }
+  });
+}
+
+/**
+ * Renders the users list in the user management dialog
+ */
+export function renderUsersList() {
+  const list = document.getElementById('users-list');
+  if (!list) return;
+
+  const users = store.getUsers();
+  if (users.length === 0) {
+    list.innerHTML = '<p class="users-empty">No hay usuarios registrados.</p>';
+    return;
+  }
+
+  list.innerHTML = users
+    .map(
+      (u) => `
+    <div class="user-card-item" data-user-id="${escapeHtml(String(u.id))}">
+      <img
+        src="${escapeHtml(u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(u.name || 'User')}`)}"
+        alt="${escapeHtml(u.name)}"
+        class="user-card-avatar"
+      />
+      <div class="user-card-info">
+        <span class="user-card-name">${escapeHtml(u.name)}</span>
+        <span class="user-card-email">${escapeHtml(u.email || '')}</span>
+      </div>
+      ${u.role ? `<span class="user-card-role-badge">${escapeHtml(u.role)}</span>` : ''}
+    </div>
+  `
+    )
+    .join('');
+}
+
+/**
+ * Initializes the User Management modal dialog and form handlers
+ */
+export function initUserModal() {
+  const dialog = document.getElementById('user-management-dialog');
+  const openBtnHeader = document.getElementById('btn-open-users-modal');
+  const openBtnMobile = document.getElementById('mobile-btn-open-users');
+  const closeBtn = document.getElementById('btn-close-users-dialog');
+  const form = document.getElementById('form-create-user');
+
+  const nameInput = document.getElementById('new-user-name');
+  const emailInput = document.getElementById('new-user-email');
+  const roleInput = document.getElementById('new-user-role');
+  const errorName = document.getElementById('error-user-name');
+  const errorEmail = document.getElementById('error-user-email');
+  const submitBtn = document.getElementById('btn-submit-create-user');
+
+  if (!dialog) return;
+
+  const clearErrors = () => {
+    if (errorName) errorName.textContent = '';
+    if (errorEmail) errorEmail.textContent = '';
+  };
+
+  const openModal = () => {
+    if (form) form.reset();
+    clearErrors();
+    renderUsersList();
+    dialog.showModal();
+    setTimeout(() => nameInput?.focus(), 50);
+  };
+
+  const closeModal = () => {
+    dialog.close();
+    if (form) form.reset();
+    clearErrors();
+  };
+
+  if (openBtnHeader) openBtnHeader.addEventListener('click', openModal);
+  if (openBtnMobile) openBtnMobile.addEventListener('click', openModal);
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+  // Close when clicking modal backdrop
+  dialog.addEventListener('click', (e) => {
+    const rect = dialog.getBoundingClientRect();
+    const isInDialog =
+      rect.top <= e.clientY &&
+      e.clientY <= rect.top + rect.height &&
+      rect.left <= e.clientX &&
+      e.clientX <= rect.left + rect.width;
+
+    if (!isInDialog) {
+      closeModal();
+    }
+  });
+
+  // Validation listeners
+  nameInput?.addEventListener('input', () => {
+    if (nameInput.value.trim().length >= 2 && errorName) errorName.textContent = '';
+  });
+
+  emailInput?.addEventListener('input', () => {
+    if (emailInput.value.trim() && errorEmail) errorEmail.textContent = '';
+  });
+
+  // Form submission
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      clearErrors();
+
+      const name = (nameInput?.value || '').trim();
+      const email = (emailInput?.value || '').trim();
+      const role = (roleInput?.value || '').trim();
+
+      let isValid = true;
+
+      if (!name || name.length < 2) {
+        if (errorName) errorName.textContent = 'El nombre es obligatorio (mínimo 2 caracteres).';
+        nameInput?.focus();
+        isValid = false;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email || !emailRegex.test(email)) {
+        if (errorEmail) errorEmail.textContent = 'Introduce un correo electrónico válido.';
+        if (isValid) emailInput?.focus();
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Registrando...';
+        }
+
+        const newUser = await api.createUser({
+          name,
+          email,
+          role: role || 'Colaborador',
+        });
+
+        store.addUser(newUser);
+        renderUsersList();
+        populateAssigneeDropdowns();
+        form.reset();
+        showToast(`Usuario "${newUser.name}" registrado correctamente`, 'success');
+      } catch (err) {
+        console.error('Error al registrar usuario:', err);
+        showToast('Error al registrar el usuario en el servidor.', 'error', 5000);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Registrar Miembro';
+        }
+      }
+    });
+  }
+}
+
 
 

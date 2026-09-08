@@ -32,7 +32,7 @@ export function parseDragEvent(evt) {
   if (!evt || !evt.item) return null;
 
   const cardElement = evt.item;
-  const taskId = cardElement.dataset.id;
+  const taskId = cardElement.dataset?.id;
   if (!taskId) return null;
 
   const fromContainer = evt.from;
@@ -63,42 +63,70 @@ export function parseDragEvent(evt) {
 
 /** @type {Array<any>} */
 let sortableInstances = [];
+let savedOnEndCallback = null;
+let savedCustomOptions = {};
 
 /**
- * Initializes SortableJS instances across all 3 Kanban column card lists
+ * Registers an individual dropzone container with SortableJS
+ * @param {HTMLElement} container
+ * @param {Function} [onEndCallback]
+ * @param {Object} [customOptions]
+ * @returns {any} Sortable instance
+ */
+export function registerDropzone(container, onEndCallback = null, customOptions = {}) {
+  const SortableLib = typeof window !== 'undefined' ? window.Sortable : null;
+  if (!SortableLib || !container) return null;
+
+  if (onEndCallback) savedOnEndCallback = onEndCallback;
+  if (customOptions && Object.keys(customOptions).length > 0) savedCustomOptions = customOptions;
+
+  const existing = typeof SortableLib.get === 'function' ? SortableLib.get(container) : null;
+  if (existing && typeof existing.destroy === 'function') {
+    existing.destroy();
+    sortableInstances = sortableInstances.filter((inst) => inst !== existing);
+  }
+
+  const options = {
+    ...defaultSortableOptions,
+    ...savedCustomOptions,
+    onEnd: (event) => {
+      const payload = parseDragEvent(event);
+      if (typeof savedOnEndCallback === 'function') {
+        savedOnEndCallback(payload, event);
+      }
+    },
+  };
+
+  const instance = typeof SortableLib.create === 'function'
+    ? SortableLib.create(container, options)
+    : new SortableLib(container, options);
+
+  sortableInstances.push(instance);
+  return instance;
+}
+
+/**
+ * Initializes SortableJS instances across all Kanban column card lists
  * @param {Function} [onEndCallback] - Callback receiving (parsedPayload, rawEvent)
  * @param {Object} [customOptions] - Optional configuration overrides
  * @returns {Array<any>} List of active SortableJS instances
  */
 export function initDragAndDrop(onEndCallback = null, customOptions = {}) {
+  if (onEndCallback) savedOnEndCallback = onEndCallback;
+  if (customOptions && Object.keys(customOptions).length > 0) savedCustomOptions = customOptions;
+
   // Clean up any existing instances first
   destroyDragAndDrop();
 
-  const SortableLib = window.Sortable;
+  const SortableLib = typeof window !== 'undefined' ? window.Sortable : null;
   if (!SortableLib) {
     console.warn('SortableJS library not available on window.Sortable');
     return [];
   }
 
-  const columnStatuses = ['todo', 'doing', 'done'];
-
-  columnStatuses.forEach((status) => {
-    const container = document.getElementById(`cards-${status}`);
-    if (!container) return;
-
-    const options = {
-      ...defaultSortableOptions,
-      ...customOptions,
-      onEnd: (event) => {
-        const payload = parseDragEvent(event);
-        if (typeof onEndCallback === 'function') {
-          onEndCallback(payload, event);
-        }
-      },
-    };
-
-    const instance = new SortableLib(container, options);
-    sortableInstances.push(instance);
+  const containers = document.querySelectorAll('.kanban-cards-list');
+  containers.forEach((container) => {
+    registerDropzone(container);
   });
 
   return sortableInstances;
@@ -128,6 +156,7 @@ export default {
   initDragAndDrop,
   destroyDragAndDrop,
   getSortableInstances,
+  registerDropzone,
   parseDragEvent,
   defaultSortableOptions,
 };

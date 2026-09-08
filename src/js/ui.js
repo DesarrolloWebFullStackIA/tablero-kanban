@@ -1,7 +1,5 @@
-/**
- * Tablero Kanban - Dynamic UI Rendering & DOM Management
- * Handles rendering of cards, columns, empty states, and metrics dashboard
- */
+import { getTagColorIndex } from './utils.js';
+import store from './store.js';
 
 /**
  * Escapes HTML entities to prevent XSS vulnerabilities
@@ -96,9 +94,51 @@ export function createCardElement(task, commentsCount = 0) {
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>`;
 
+  const checklistIcon = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 11l3 3L22 4"></path>
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+    </svg>`;
+
   const descHtml = task.description
     ? `<p class="card-desc">${escapeHtml(task.description)}</p>`
     : '';
+
+  const tagsHtml =
+    Array.isArray(task.tags) && task.tags.length > 0
+      ? `<div class="card-tags">
+          ${task.tags
+            .map((tag) => {
+              const colorIdx = getTagColorIndex(tag, 6);
+              return `<button type="button" class="tag-chip tag-chip--color-${colorIdx}" data-tag="${escapeHtml(tag)}" title="Filtrar por ${escapeHtml(tag)}">${escapeHtml(tag)}</button>`;
+            })
+            .join('')}
+        </div>`
+      : '';
+
+  let checklistBadgeHtml = '';
+  if (Array.isArray(task.checklist) && task.checklist.length > 0) {
+    const totalChk = task.checklist.length;
+    const completedChk = task.checklist.filter((item) => item.completed).length;
+    const allDone = completedChk === totalChk;
+    checklistBadgeHtml = `
+      <span class="card-checklist-badge ${allDone ? 'is-complete' : ''}" title="${completedChk} de ${totalChk} subtareas completadas">
+        ${checklistIcon}
+        <span>${completedChk}/${totalChk}</span>
+      </span>`;
+  }
+
+  let assigneeHtml = '';
+  const assignee = task.assignee || (task.assigneeId ? store.getUserById(task.assigneeId) : null);
+  if (assignee) {
+    const avatarUrl =
+      assignee.avatar ||
+      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(assignee.name || 'User')}`;
+    assigneeHtml = `
+      <span class="card-avatar" title="Asignado a: ${escapeHtml(assignee.name || 'Usuario')}">
+        <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(assignee.name || 'Usuario')}" class="card-avatar-img" />
+      </span>`;
+  }
 
   const commentsBadgeHtml = commentsCount > 0
     ? `<span class="card-comments-badge" title="${commentsCount} comentario${commentsCount > 1 ? 's' : ''}">
@@ -123,6 +163,7 @@ export function createCardElement(task, commentsCount = 0) {
 
     <h3 class="card-title">${escapeHtml(task.title)}</h3>
     ${descHtml}
+    ${tagsHtml}
 
     <footer class="card-footer">
       <span
@@ -132,7 +173,11 @@ export function createCardElement(task, commentsCount = 0) {
         ${calendarIcon}
         <span>${formattedDueDate}</span>
       </span>
-      ${commentsBadgeHtml}
+      <div class="card-footer-indicators">
+        ${assigneeHtml}
+        ${checklistBadgeHtml}
+        ${commentsBadgeHtml}
+      </div>
     </footer>
   `;
 
@@ -180,40 +225,194 @@ export function renderCards(container, tasks = [], getCommentsCount = null) {
     const counterEl = document.getElementById(`counter-${status}`);
     if (counterEl) {
       counterEl.textContent = String(tasks.length);
-      const label = status === 'todo' ? 'en Por Hacer' : status === 'doing' ? 'en En Proceso' : 'finalizadas';
-      counterEl.setAttribute('aria-label', `${tasks.length} tareas ${label}`);
+      const col = store.getColumnById(status);
+      const colTitle = col ? col.title : status;
+      counterEl.setAttribute('aria-label', `${tasks.length} tareas en ${colTitle}`);
     }
   }
 }
 
 /**
- * Renders all 3 Kanban columns from a complete or filtered tasks array
+ * Renders all Kanban columns layout and the "+ Añadir Columna" action wrapper into #board-grid
+ * @param {Array<{ id: string, title: string, isCustom?: boolean }>} [columns]
+ */
+export function renderBoardColumns(columns = store.getColumns()) {
+  const grid = document.getElementById('board-grid') || document.querySelector('.board-grid');
+  if (!grid) return;
+
+  const columnsHtml = columns
+    .map((col) => {
+      const isDefault = !col.isCustom;
+      const indicatorClass = isDefault
+        ? `column-indicator--${col.id}`
+        : 'column-indicator--custom';
+
+      let emptyIconHtml = `
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="9" x2="15" y2="9"></line>
+          <line x1="9" y1="13" x2="15" y2="13"></line>
+          <line x1="9" y1="17" x2="11" y2="17"></line>
+        </svg>`;
+      let emptyText = 'Sin tareas pendientes';
+
+      if (col.id === 'doing') {
+        emptyIconHtml = `
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>`;
+        emptyText = 'No hay tareas en progreso';
+      } else if (col.id === 'done') {
+        emptyIconHtml = `
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>`;
+        emptyText = 'No hay tareas completadas aún';
+      }
+
+      return `
+        <section class="kanban-column kanban-column--${escapeHtml(col.id)} ${col.isCustom ? 'kanban-column--custom' : ''}" id="column-${escapeHtml(col.id)}" data-status="${escapeHtml(col.id)}" aria-labelledby="heading-col-${escapeHtml(col.id)}">
+          <header class="column-header">
+            <div class="column-title-wrapper" data-column="${escapeHtml(col.id)}">
+              <span class="column-indicator ${indicatorClass}" aria-hidden="true"></span>
+              <h2 class="column-title" id="heading-col-${escapeHtml(col.id)}" data-column="${escapeHtml(col.id)}" title="Doble clic para editar">${escapeHtml(col.title)}</h2>
+              <button
+                type="button"
+                class="btn-edit-column-title"
+                data-column="${escapeHtml(col.id)}"
+                aria-label="Editar título de columna ${escapeHtml(col.title)}"
+                title="Editar título"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                </svg>
+              </button>
+              <span class="column-counter" id="counter-${escapeHtml(col.id)}" aria-label="0 tareas en ${escapeHtml(col.title)}">0</span>
+            </div>
+            <div class="column-header-actions">
+              ${
+                col.isCustom
+                  ? `
+              <button
+                type="button"
+                class="btn-column-delete"
+                data-column="${escapeHtml(col.id)}"
+                aria-label="Eliminar columna ${escapeHtml(col.title)}"
+                title="Eliminar columna"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+              </button>`
+                  : ''
+              }
+              <button
+                type="button"
+                class="btn-column-add"
+                data-column="${escapeHtml(col.id)}"
+                aria-label="Añadir tarea a ${escapeHtml(col.title)}"
+                title="Añadir tarea aquí"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            </div>
+          </header>
+
+          <div
+            class="kanban-cards-list"
+            id="cards-${escapeHtml(col.id)}"
+            data-status="${escapeHtml(col.id)}"
+            role="region"
+            aria-label="Lista de tareas ${escapeHtml(col.title)}"
+          >
+            <!-- Empty Placeholder -->
+            <div class="column-empty-state" id="empty-${escapeHtml(col.id)}" aria-hidden="false">
+              ${emptyIconHtml}
+              <p class="empty-state-text">${emptyText}</p>
+            </div>
+          </div>
+        </section>
+      `;
+    })
+    .join('');
+
+  const addColumnHtml = `
+    <!-- Add Column Action Card -->
+    <div class="add-column-wrapper" id="add-column-wrapper">
+      <button type="button" class="btn-add-column" id="btn-add-column" aria-label="Añadir nueva columna">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>+ Añadir Columna</span>
+      </button>
+      <form class="add-column-form" id="add-column-form" hidden novalidate>
+        <input
+          type="text"
+          class="form-input add-column-input"
+          id="add-column-input"
+          placeholder="Título de la columna..."
+          maxlength="50"
+          autocomplete="off"
+          aria-label="Título de la nueva columna"
+        />
+        <div class="add-column-actions">
+          <button type="submit" class="btn btn--primary btn--sm" id="btn-confirm-add-column">
+            Añadir Columna
+          </button>
+          <button type="button" class="btn btn--secondary btn--sm btn-cancel-add-column" id="btn-cancel-add-column" aria-label="Cancelar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  grid.innerHTML = columnsHtml + addColumnHtml;
+}
+
+/**
+ * Renders all active Kanban columns from a complete or filtered tasks array
  * @param {Array<Object>} tasks - Complete or filtered tasks
  * @param {Map<string, Array<object>>|Function} [getCommentsCount] - Comments count provider
  */
 export function renderBoard(tasks = [], getCommentsCount = null) {
-  const columns = {
-    todo: [],
-    doing: [],
-    done: [],
-  };
+  const allColumns = store.getColumns();
+  const columnTasksMap = Object.create(null);
+
+  for (const col of allColumns) {
+    columnTasksMap[col.id] = [];
+  }
 
   for (const task of tasks) {
-    if (columns[task.status]) {
-      columns[task.status].push(task);
+    const statusKey = String(task.status);
+    if (Array.isArray(columnTasksMap[statusKey])) {
+      columnTasksMap[statusKey].push(task);
     } else {
       // Default fallback if status is missing or invalid
-      columns.todo.push(task);
+      if (Array.isArray(columnTasksMap.todo)) {
+        columnTasksMap.todo.push(task);
+      } else if (allColumns[0] && Array.isArray(columnTasksMap[allColumns[0].id])) {
+        columnTasksMap[allColumns[0].id].push(task);
+      }
     }
   }
 
-  const todoContainer = document.getElementById('cards-todo');
-  const doingContainer = document.getElementById('cards-doing');
-  const doneContainer = document.getElementById('cards-done');
-
-  if (todoContainer) renderCards(todoContainer, columns.todo, getCommentsCount);
-  if (doingContainer) renderCards(doingContainer, columns.doing, getCommentsCount);
-  if (doneContainer) renderCards(doneContainer, columns.done, getCommentsCount);
+  for (const col of allColumns) {
+    const container = document.getElementById(`cards-${col.id}`);
+    if (container) {
+      renderCards(container, columnTasksMap[col.id] || [], getCommentsCount);
+    }
+  }
 }
 
 /**
@@ -236,7 +435,7 @@ export function updateMetricsUI(metrics) {
 
 /**
  * Updates an individual column counter element and empty state visibility
- * @param {string} status - Column status ('todo' | 'doing' | 'done')
+ * @param {string} status - Column status
  * @param {number} [count=null] - Optional explicit count; if null, counts .kanban-card in DOM
  */
 export function updateColumnState(status, count = null) {
@@ -249,8 +448,9 @@ export function updateColumnState(status, count = null) {
 
   if (counter) {
     counter.textContent = String(actualCount);
-    const label = status === 'todo' ? 'en Por Hacer' : status === 'doing' ? 'en En Proceso' : 'finalizadas';
-    counter.setAttribute('aria-label', `${actualCount} tareas ${label}`);
+    const col = store.getColumnById(status);
+    const colTitle = col ? col.title : status;
+    counter.setAttribute('aria-label', `${actualCount} tareas en ${colTitle}`);
   }
 
   const emptyState = container.querySelector('.column-empty-state');
@@ -350,9 +550,9 @@ export function renderComments(container, comments = [], countEl = null) {
 export function updateCardCommentsCount(taskId, count) {
   const card = document.querySelector(`.kanban-card[data-id="${taskId}"]`);
   if (!card) return;
-  const commentsBadge = card.querySelector('.card-meta-comments');
+  const commentsBadge = card.querySelector('.card-comments-badge, .card-meta-comments');
   if (commentsBadge) {
-    commentsBadge.title = `${count} comentarios`;
+    commentsBadge.title = `${count} comentario${count > 1 ? 's' : ''}`;
     const countSpan = commentsBadge.querySelector('span');
     if (countSpan) {
       countSpan.textContent = String(count);
@@ -360,5 +560,41 @@ export function updateCardCommentsCount(taskId, count) {
   }
 }
 
+/**
+ * Updates the checklist badge on a specific task card in the board
+ * @param {string|number} taskId - Task identifier
+ * @param {Array<{ id: string, text: string, completed: boolean }>} [checklist=[]]
+ */
+export function updateCardChecklistBadge(taskId, checklist = []) {
+  const card = document.querySelector(`.kanban-card[data-id="${taskId}"]`);
+  if (!card) return;
 
+  const indicators = card.querySelector('.card-footer-indicators');
+  let badge = card.querySelector('.card-checklist-badge');
 
+  if (!checklist || checklist.length === 0) {
+    if (badge) badge.remove();
+    return;
+  }
+
+  const total = checklist.length;
+  const completed = checklist.filter((item) => item.completed).length;
+  const allDone = completed === total;
+
+  if (!badge && indicators) {
+    badge = document.createElement('span');
+    indicators.prepend(badge);
+  }
+
+  if (badge) {
+    badge.className = `card-checklist-badge ${allDone ? 'is-complete' : ''}`;
+    badge.title = `${completed} de ${total} subtareas completadas`;
+    badge.innerHTML = `
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+      <span>${completed}/${total}</span>
+    `;
+  }
+}

@@ -186,6 +186,36 @@ export async function deleteComment(id) {
   });
 }
 
+// --------------------------------------------------------------------------
+// Users API Endpoints
+// --------------------------------------------------------------------------
+
+/**
+ * Fetch all registered users
+ * @returns {Promise<Array<object>>}
+ */
+export async function getUsers() {
+  return await request('/users');
+}
+
+/**
+ * Create a new user (POST /users)
+ * @param {object} userData - User payload (name, email, role, avatar)
+ * @returns {Promise<object>} Created user
+ */
+export async function createUser(userData) {
+  const payload = {
+    ...userData,
+    avatar:
+      userData.avatar ||
+      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userData.name || 'User')}`,
+  };
+  return await request('/users', {
+    method: 'POST',
+    body: payload,
+  });
+}
+
 export default {
   BASE_URL,
   ApiError,
@@ -198,4 +228,6 @@ export default {
   getCommentsByTaskId,
   createComment,
   deleteComment,
+  getUsers,
+  createUser,
 };
