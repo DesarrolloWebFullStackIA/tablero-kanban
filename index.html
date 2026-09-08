@@ -151,6 +151,70 @@
       </div>
     </nav>
 
+    <!-- Toolbar: Search & Filters -->
+    <div class="toolbar-wrapper">
+      <section class="toolbar" aria-label="Herramientas de búsqueda y filtrado">
+        <!-- Search Input -->
+        <div class="search-box">
+          <label for="search-input" class="visually-hidden">Buscar tareas por título</label>
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="search"
+              id="search-input"
+              class="form-input search-input"
+              placeholder="Buscar por título..."
+              autocomplete="off"
+            />
+            <button
+              type="button"
+              id="btn-clear-search"
+              class="btn-clear-search"
+              aria-label="Limpiar búsqueda"
+              hidden
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filter-controls">
+          <div class="filter-group">
+            <label for="filter-priority" class="filter-label">Prioridad:</label>
+            <div class="select-wrapper">
+              <select id="filter-priority" class="form-select filter-select" aria-label="Filtrar por prioridad">
+                <option value="all">Todas</option>
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+              </select>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="btn-reset-filters"
+            class="btn btn--secondary btn-reset"
+            aria-label="Restablecer filtros"
+            title="Restablecer todos los filtros"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            <span>Restablecer</span>
+          </button>
+        </div>
+      </section>
+    </div>
+
     <main class="board-container" id="board-container">
     </main>
   </body>
