@@ -453,6 +453,79 @@ export function initTaskDetailModal() {
       }
     });
   }
+
+  // Handle Add Comment Form Submission
+  const addCommentForm = document.getElementById('form-add-comment');
+  const commentAuthorInput = document.getElementById('comment-author');
+  const commentTextInput = document.getElementById('comment-text');
+  const commentSubmitBtn = document.getElementById('btn-submit-comment');
+
+  if (addCommentForm) {
+    addCommentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const taskId = idInput?.value || store.activeTaskId;
+      if (!taskId) return;
+
+      const author = (commentAuthorInput?.value || '').trim();
+      const text = (commentTextInput?.value || '').trim();
+
+      if (!author) {
+        showToast('Por favor, ingresa tu nombre.', 'error');
+        commentAuthorInput?.focus();
+        return;
+      }
+
+      if (!text || text.length < 2) {
+        showToast('El comentario debe tener al menos 2 caracteres.', 'error');
+        commentTextInput?.focus();
+        return;
+      }
+
+      try {
+        if (commentSubmitBtn) {
+          commentSubmitBtn.disabled = true;
+          commentSubmitBtn.textContent = 'Añadiendo...';
+        }
+
+        const newComment = await api.createComment({
+          taskId: String(taskId),
+          author,
+          text,
+        });
+
+        // Store update (emits COMMENT_ADDED, updating the board card comments badge)
+        store.addComment(newComment);
+
+        // Update modal comments list & count
+        const commentsList = document.getElementById('detail-comments-list');
+        const commentsCount = document.getElementById('detail-comments-count');
+        const taskComments = store.getCommentsForTask(taskId);
+        renderComments(commentsList, taskComments, commentsCount);
+
+        // Smooth scroll to bottom of comments list
+        if (commentsList) {
+          commentsList.scrollTop = commentsList.scrollHeight;
+        }
+
+        // Reset comment text field and keep author for convenience
+        if (commentTextInput) {
+          commentTextInput.value = '';
+          commentTextInput.focus();
+        }
+
+        showToast('Comentario añadido correctamente', 'success');
+      } catch (err) {
+        console.error('Error al añadir comentario:', err);
+        showToast('Error al añadir comentario. Verifica la conexión con el servidor.', 'error', 5000);
+      } finally {
+        if (commentSubmitBtn) {
+          commentSubmitBtn.disabled = false;
+          commentSubmitBtn.textContent = 'Añadir Comentario';
+        }
+      }
+    });
+  }
 }
 
 
