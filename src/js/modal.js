@@ -365,6 +365,59 @@ export function initTaskDetailModal() {
       }
     });
   }
+
+  // Handle Edit Task Form Submission
+  const editForm = document.getElementById('form-edit-task');
+  const idInput = document.getElementById('detail-task-id');
+  const titleInput = document.getElementById('detail-task-title-input');
+  const descInput = document.getElementById('detail-task-desc-input');
+  const saveBtn = document.getElementById('btn-save-task-edits');
+
+  if (editForm) {
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const taskId = idInput?.value;
+      if (!taskId) return;
+
+      const newTitle = (titleInput?.value || '').trim();
+      const newDesc = (descInput?.value || '').trim();
+
+      if (!newTitle || newTitle.length < 3) {
+        showToast('El título debe tener al menos 3 caracteres.', 'error');
+        titleInput?.focus();
+        return;
+      }
+
+      try {
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.textContent = 'Guardando...';
+        }
+
+        const updatedTask = await api.updateTask(taskId, {
+          title: newTitle,
+          description: newDesc,
+        });
+
+        // Update central reactive store
+        store.updateTask(taskId, {
+          title: updatedTask.title || newTitle,
+          description: updatedTask.description ?? newDesc,
+        });
+
+        showToast('Cambios guardados correctamente', 'success');
+      } catch (err) {
+        console.error('Error al guardar cambios de la tarea:', err);
+        showToast('Error al guardar cambios. Verifica la conexión con el servidor.', 'error', 5000);
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Guardar Cambios';
+        }
+      }
+    });
+  }
 }
 
 
