@@ -1265,29 +1265,51 @@ a {
 }
 
 @media (max-width: 768px) {
+  .board-container {
+    padding: 0 var(--space-sm) var(--space-xs);
+  }
+
   .board-grid {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-    overflow-x: visible;
+    flex-direction: row;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-inline: var(--space-sm);
+    gap: var(--space-sm);
+    padding-bottom: var(--space-xs);
+    padding-right: var(--space-md);
   }
 
   .kanban-column {
-    flex: 1 1 auto;
-    width: 100%;
-    min-width: 0;
-    max-height: none;
-    min-height: auto;
+    flex: 0 0 86vw;
+    width: 86vw;
+    max-width: 360px;
+    min-width: 270px;
+    scroll-snap-align: center;
+    scroll-snap-stop: normal;
+    height: 100%;
+    max-height: 100%;
+    padding: var(--space-sm);
   }
 
   .add-column-wrapper {
-    flex: 1 1 auto;
-    width: 100%;
-    min-width: 0;
+    flex: 0 0 80vw;
+    width: 80vw;
+    max-width: 320px;
+    min-width: 250px;
+    scroll-snap-align: center;
+    align-self: flex-start;
+    margin-right: var(--space-md);
   }
 
   .kanban-cards-list {
-    max-height: 450px;
+    flex: 1;
+    min-height: 120px;
+    max-height: none;
+    overflow-y: auto;
   }
 }
 
@@ -2351,6 +2373,67 @@ a {
 
   .form-row {
     flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .kanban-column {
+    flex: 0 0 88vw;
+    width: 88vw;
+    min-width: 260px;
+  }
+
+  .add-column-wrapper {
+    flex: 0 0 82vw;
+    width: 82vw;
+    min-width: 240px;
+  }
+
+  .app-dialog {
+    width: 96vw;
+    max-width: 96vw;
+    max-height: 94vh;
+    max-height: 94dvh;
+    border-radius: var(--radius-md);
+  }
+
+  .app-dialog--wide,
+  .app-dialog--users {
+    width: 96vw;
+    max-width: 96vw;
+  }
+
+  .dialog-header {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .dialog-form,
+  .dialog-body {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .dialog-footer {
+    padding: var(--space-sm) var(--space-md);
+    flex-direction: column-reverse;
+    gap: var(--space-xs);
+  }
+
+  .dialog-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .detail-actions-bar {
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .detail-actions-bar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .users-list {
+    grid-template-columns: 1fr;
   }
 }
 
