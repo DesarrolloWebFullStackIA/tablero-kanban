@@ -117,6 +117,17 @@ function initFilters() {
   const prioritySelect = document.getElementById('filter-priority');
   const resetFiltersBtn = document.getElementById('btn-reset-filters');
 
+  // Update reset button visual active state
+  const updateResetButtonState = () => {
+    const hasActiveFilters = Boolean(
+      (searchInput && searchInput.value.trim().length > 0) ||
+      (prioritySelect && prioritySelect.value !== 'all')
+    );
+    if (resetFiltersBtn) {
+      resetFiltersBtn.classList.toggle('btn-reset--active', hasActiveFilters);
+    }
+  };
+
   // Debounced real-time search update to avoid UI re-render bottleneck on fast typing
   const debouncedSetSearch = debounce((query) => {
     store.setSearchQuery(query);
@@ -132,6 +143,7 @@ function initFilters() {
           clearSearchBtn.setAttribute('hidden', '');
         }
       }
+      updateResetButtonState();
       debouncedSetSearch(query);
     });
 
@@ -140,6 +152,7 @@ function initFilters() {
       if (e.key === 'Escape' && searchInput.value) {
         searchInput.value = '';
         if (clearSearchBtn) clearSearchBtn.setAttribute('hidden', '');
+        updateResetButtonState();
         store.setSearchQuery('');
       }
     });
@@ -152,12 +165,14 @@ function initFilters() {
         searchInput.focus();
       }
       clearSearchBtn.setAttribute('hidden', '');
+      updateResetButtonState();
       store.setSearchQuery('');
     });
   }
 
   if (prioritySelect) {
     prioritySelect.addEventListener('change', (e) => {
+      updateResetButtonState();
       store.setPriorityFilter(e.target.value);
     });
   }
@@ -173,6 +188,7 @@ function initFilters() {
       if (prioritySelect) {
         prioritySelect.value = 'all';
       }
+      updateResetButtonState();
       store.resetFilters();
     });
   }
