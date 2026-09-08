@@ -708,16 +708,20 @@ a {
 
 .search-icon {
   position: absolute;
-  left: var(--space-sm);
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--color-text-subtle);
   pointer-events: none;
   transition: color var(--transition-fast);
+  z-index: 1;
 }
 
-.search-input {
+.search-input-wrapper .search-input,
+.form-input.search-input {
   width: 100%;
   height: 38px;
-  padding: 0 2rem 0 2.25rem;
+  padding: 0 2.25rem 0 2.65rem !important;
   background-color: var(--color-bg-input);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -744,6 +748,8 @@ a {
 .btn-clear-search {
   position: absolute;
   right: var(--space-xs);
+  top: 50%;
+  transform: translateY(-50%);
   width: 26px;
   height: 26px;
   border-radius: var(--radius-full);
@@ -752,6 +758,7 @@ a {
   justify-content: center;
   color: var(--color-text-subtle);
   transition: all var(--transition-fast);
+  z-index: 1;
 }
 
 .btn-clear-search:hover {
