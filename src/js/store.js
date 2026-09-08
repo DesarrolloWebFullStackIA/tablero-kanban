@@ -132,6 +132,25 @@ class Store {
   }
 
   /**
+   * Move a task to a new status column optimistically
+   * @param {string|number} id - Task identifier
+   * @param {TaskStatus} newStatus - Destination status
+   * @returns {{ task: Task, oldStatus: TaskStatus, newStatus: TaskStatus }|null}
+   */
+  moveTask(id, newStatus) {
+    const index = this.tasks.findIndex((t) => String(t.id) === String(id));
+    if (index === -1) return null;
+
+    const oldStatus = this.tasks[index].status;
+    if (oldStatus === newStatus) return null;
+
+    this.tasks[index] = { ...this.tasks[index], status: newStatus };
+    const movedData = { task: this.tasks[index], oldStatus, newStatus };
+    this.notify('TASK_MOVED', movedData);
+    return movedData;
+  }
+
+  /**
    * Remove a task from the store
    * @param {string|number} id - Task identifier
    * @returns {Task|null} Deleted task or null
