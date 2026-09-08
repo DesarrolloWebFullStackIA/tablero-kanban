@@ -59,22 +59,41 @@ graph TD
 - Controls HTML5 `<dialog>` opening (`showModal()`), closing (`close()`), and form resets.
 
 ### 5. Drag & Drop Module (`src/js/dragdrop.js`)
-- Initializes `SortableJS` on each column container (`.kanban-cards-list`).
+- Initializes `SortableJS` on each column container (`.kanban-cards-list`), supporting both static and dynamically created columns.
 - Handles `onEnd` events when a card is dropped:
   - Extracts card ID and target column status.
   - Applies optimistic UI update and metrics recalculation.
   - Invokes `store.moveTask(taskId, newStatus)`.
   - Reverts card DOM position and shows an error toast if `PATCH` fails.
+  - Configures mobile touch delay (150ms) to ensure smooth touch scrolling without accidental drags.
 
-### 6. Utilities (`src/js/utils.js`)
-- Sanitization functions to prevent XSS.
-- Date formatters (e.g., formatting ISO dates to localized readable dates and calculating overdue status).
-- Debounce helper for live search input.
-- Input validation helpers.
+### 6. Modal & Dialog Controller (`src/js/modal.js`)
+- Controls native HTML5 `<dialog>` elements across the entire lifecycle:
+  - **Task Creation Modal (`#create-task-dialog`)**: Manages form field validation, priority selection, tag previews, and team member assignment dropdown.
+  - **Task Detail & Inspection Modal (`#task-detail-dialog`)**: Real-time inline editing for title and description, subtask checklist items with progress percentage, and chronological comments feed with deletion.
+  - **Team Member Management Modal (`#user-management-dialog`)**: User registration (`POST /users`) with automatic DiceBear Bottts Neutral avatar generation and interactive roster view.
+  - **Confirmation Dialogs**: Accessible prompt for irreversible card or column deletion.
+
+### 7. Utilities (`src/js/utils.js`)
+- Sanitization functions to prevent XSS (`escapeHtml`).
+- Date formatters (formatting ISO dates to localized Spanish readable format and calculating overdue status).
+- Debounce helper for non-blocking live search input.
+- Hashtag extraction (`extractHashtags`) and deterministic color token assignment (`getTagColorClass`).
+- Toast notification alerts (`showToast`).
+
+---
 
 ## Modal Lifecycle with Native `<dialog>`
 The project leverages the native HTML5 `<dialog>` element:
-- **Task Creation Modal (`#create-task-dialog`)**: Opened via "New Task" buttons. Closed on submission or cancel. Native `::backdrop` provides background dimming.
-- **Task Detail & Comments Modal (`#task-detail-dialog`)**: Opened on card click. Houses editable title and description fields, metadata display, existing comments feed, and a new comment form.
-- **Keyboard Handling**: Pressing `Escape` automatically dismisses the dialog without custom JavaScript listeners. Focus is trapped natively inside the modal while open.
+- **Task Creation Modal (`#create-task-dialog`)**: Opened via "New Task" buttons. Closed on submission or cancel. Native `::backdrop` provides background blur and dimming.
+- **Task Detail & Comments Modal (`#task-detail-dialog`)**: Opened on card click. Houses editable title and description fields, metadata display, subtasks checklist, existing comments feed, and a new comment form.
+- **Team Management Modal (`#user-management-dialog`)**: Registered users roster, new member creation form, and Bottts Neutral robot avatars.
+- **Keyboard Handling**: Pressing `Escape` automatically dismisses active dialogs. Focus is trapped natively inside the modal while open and restored to triggering element upon close.
+
+---
+
+## Responsive & Viewport Architecture (100% Fluid)
+- **Full Viewport Utilization**: The layout expands fluidly across 1080p, 1440p, 4K, and ultrawide screens, utilizing `width: 100%` and `height: 100vh / 100dvh`.
+- **Independent Column Scrolling**: Board columns stretch vertically while cards scroll independently inside `.kanban-cards-list`, maintaining persistent headers and toolbars.
+- **Mobile Horizontal Snap Scrolling (<768px)**: Columns use `scroll-snap-type: x mandatory` with smooth horizontal swiping across 86vw-wide columns and stacked compact modal controls.
 

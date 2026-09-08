@@ -56,6 +56,10 @@ Version strings follow the standard `MAJOR.MINOR.PATCH` format with strict proje
 - **Phase 6** (SortableJS Drag & Drop) ➔ `v6.0.0`
 - **Phase 7** (Modal & Comments) ➔ `v7.0.0`
 - **Phase 8** (Search, Filters & Tests) ➔ `v8.0.0`
+- **Phase 9** (Launcher & GitHub Pages) ➔ `v8.1.0`
+- **Phase 10** (Advanced Bonus Features) ➔ `v9.0.0`
+- **Phase 11** (Full-Screen Responsive Layout) ➔ `v10.0.0`
+- **Hotfix 12** (Mobile Toolbar & Avatars) ➔ `v10.0.1`
 
 ### 2. Minor Version (`X.Y.0`) — Task Completion
 - Incremented on **every individual task** completed within the current phase.
