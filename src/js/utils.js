@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Tablero Kanban - Utility Functions & Toast Notification Service
  */
 
@@ -80,3 +80,20 @@ export function showToast(message, type = 'info', duration = 4000) {
     setTimeout(dismiss, duration);
   }
 }
+
+/**
+ * Debounces a function call by a specified delay
+ * @param {Function} func - Function to execute after delay
+ * @param {number} [delay=250] - Delay in milliseconds
+ * @returns {Function} Debounced wrapper
+ */
+export function debounce(func, delay = 250) {
+  let timerId;
+  return function (...args) {
+    if (timerId) clearTimeout(timerId);
+    timerId = setTimeout(() => {
+      func.apply(this, args);
+    }, delay);
+  };
+}
+
