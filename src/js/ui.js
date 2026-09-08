@@ -93,6 +93,12 @@ export function createCardElement(task, commentsCount = 0) {
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
     </svg>`;
 
+  const checklistIcon = `
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 11l3 3L22 4"></path>
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+    </svg>`;
+
   const descHtml = task.description
     ? `<p class="card-desc">${escapeHtml(task.description)}</p>`
     : '';
@@ -108,6 +114,18 @@ export function createCardElement(task, commentsCount = 0) {
             .join('')}
         </div>`
       : '';
+
+  let checklistBadgeHtml = '';
+  if (Array.isArray(task.checklist) && task.checklist.length > 0) {
+    const totalChk = task.checklist.length;
+    const completedChk = task.checklist.filter((item) => item.completed).length;
+    const allDone = completedChk === totalChk;
+    checklistBadgeHtml = `
+      <span class="card-checklist-badge ${allDone ? 'is-complete' : ''}" title="${completedChk} de ${totalChk} subtareas completadas">
+        ${checklistIcon}
+        <span>${completedChk}/${totalChk}</span>
+      </span>`;
+  }
 
   const commentsBadgeHtml = commentsCount > 0
     ? `<span class="card-comments-badge" title="${commentsCount} comentario${commentsCount > 1 ? 's' : ''}">
@@ -142,7 +160,10 @@ export function createCardElement(task, commentsCount = 0) {
         ${calendarIcon}
         <span>${formattedDueDate}</span>
       </span>
-      ${commentsBadgeHtml}
+      <div class="card-footer-indicators">
+        ${checklistBadgeHtml}
+        ${commentsBadgeHtml}
+      </div>
     </footer>
   `;
 
@@ -360,9 +381,9 @@ export function renderComments(container, comments = [], countEl = null) {
 export function updateCardCommentsCount(taskId, count) {
   const card = document.querySelector(`.kanban-card[data-id="${taskId}"]`);
   if (!card) return;
-  const commentsBadge = card.querySelector('.card-meta-comments');
+  const commentsBadge = card.querySelector('.card-comments-badge, .card-meta-comments');
   if (commentsBadge) {
-    commentsBadge.title = `${count} comentarios`;
+    commentsBadge.title = `${count} comentario${count > 1 ? 's' : ''}`;
     const countSpan = commentsBadge.querySelector('span');
     if (countSpan) {
       countSpan.textContent = String(count);
@@ -370,5 +391,41 @@ export function updateCardCommentsCount(taskId, count) {
   }
 }
 
+/**
+ * Updates the checklist badge on a specific task card in the board
+ * @param {string|number} taskId - Task identifier
+ * @param {Array<{ id: string, text: string, completed: boolean }>} [checklist=[]]
+ */
+export function updateCardChecklistBadge(taskId, checklist = []) {
+  const card = document.querySelector(`.kanban-card[data-id="${taskId}"]`);
+  if (!card) return;
 
+  const indicators = card.querySelector('.card-footer-indicators');
+  let badge = card.querySelector('.card-checklist-badge');
 
+  if (!checklist || checklist.length === 0) {
+    if (badge) badge.remove();
+    return;
+  }
+
+  const total = checklist.length;
+  const completed = checklist.filter((item) => item.completed).length;
+  const allDone = completed === total;
+
+  if (!badge && indicators) {
+    badge = document.createElement('span');
+    indicators.prepend(badge);
+  }
+
+  if (badge) {
+    badge.className = `card-checklist-badge ${allDone ? 'is-complete' : ''}`;
+    badge.title = `${completed} de ${total} subtareas completadas`;
+    badge.innerHTML = `
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 11l3 3L22 4"></path>
+        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+      </svg>
+      <span>${completed}/${total}</span>
+    `;
+  }
+}

@@ -208,5 +208,77 @@ describe('Central State Store (store.js)', () => {
       expect(store.getCommentsForTask('1')[0].id).toBe('102');
     });
   });
+
+  describe('Subtasks & Checklist Operations', () => {
+    const taskWithChecklist = {
+      id: '10',
+      title: 'Crear sistema de diseño',
+      priority: 'Alta',
+      dueDate: '2026-09-20',
+      status: 'todo',
+      checklist: [
+        { id: 'c1', text: 'Diseñar paleta cromática', completed: true },
+        { id: 'c2', text: 'Estructurar tipografías', completed: false },
+        { id: 'c3', text: 'Documentar componentes accesibles', completed: false },
+      ],
+    };
+
+    beforeEach(() => {
+      store.setTasks([JSON.parse(JSON.stringify(taskWithChecklist))]);
+    });
+
+    it('should retrieve task with subtask checklist items', () => {
+      const task = store.getTaskById('10');
+      expect(task).toBeDefined();
+      expect(task?.checklist).toHaveLength(3);
+      expect(task?.checklist[0].completed).toBe(true);
+      expect(task?.checklist[1].completed).toBe(false);
+    });
+
+    it('should toggle a subtask completed status in store', () => {
+      const task = store.getTaskById('10');
+      const updatedChecklist = task?.checklist.map((item) =>
+        item.id === 'c2' ? { ...item, completed: true } : item
+      );
+
+      const updatedTask = store.updateTask('10', { checklist: updatedChecklist });
+      expect(updatedTask?.checklist.find((i) => i.id === 'c2').completed).toBe(true);
+
+      const completedCount = updatedTask?.checklist.filter((i) => i.completed).length;
+      expect(completedCount).toBe(2);
+    });
+
+    it('should add a new subtask to the checklist in store', () => {
+      const task = store.getTaskById('10');
+      const newSubtask = {
+        id: 'c4',
+        text: 'Revisar contraste con WCAG',
+        completed: false,
+      };
+      const updatedChecklist = [...(task?.checklist || []), newSubtask];
+
+      const updatedTask = store.updateTask('10', { checklist: updatedChecklist });
+      expect(updatedTask?.checklist).toHaveLength(4);
+      expect(updatedTask?.checklist[3].text).toBe('Revisar contraste con WCAG');
+    });
+
+    it('should delete a subtask from the checklist in store', () => {
+      const task = store.getTaskById('10');
+      const updatedChecklist = task?.checklist.filter((item) => item.id !== 'c1');
+
+      const updatedTask = store.updateTask('10', { checklist: updatedChecklist });
+      expect(updatedTask?.checklist).toHaveLength(2);
+      expect(updatedTask?.checklist.some((i) => i.id === 'c1')).toBe(false);
+    });
+
+    it('should correctly calculate completion percentage', () => {
+      const task = store.getTaskById('10');
+      const total = task?.checklist.length || 0;
+      const completed = task?.checklist.filter((i) => i.completed).length || 0;
+      const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      expect(percent).toBe(33);
+    });
+  });
 });
 

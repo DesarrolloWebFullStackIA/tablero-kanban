@@ -6,7 +6,7 @@
 import api from './api.js';
 import store from './store.js';
 import { showToast, parseTags, getTagColorIndex } from './utils.js';
-import { formatDate, isTaskOverdue, renderComments } from './ui.js';
+import { formatDate, isTaskOverdue, renderComments, updateCardChecklistBadge, escapeHtml } from './ui.js';
 
 /**
  * Initializes the Create Task modal dialog and form handlers
@@ -267,6 +267,179 @@ export function getStatusLabel(status) {
 }
 
 /**
+ * Renders the checklist items, progress bar, and counters for the specified task
+ * @param {string|number} taskId
+ */
+export function renderChecklist(taskId) {
+  const container = document.getElementById('detail-checklist-items');
+  const countEl = document.getElementById('detail-checklist-count');
+  const progressEl = document.getElementById('detail-checklist-progress');
+  const percentageEl = document.getElementById('detail-checklist-percentage');
+
+  if (!container) return;
+
+  const task = store.getTaskById(taskId);
+  const checklist = task && Array.isArray(task.checklist) ? task.checklist : [];
+
+  const total = checklist.length;
+  const completed = checklist.filter((item) => item.completed).length;
+  const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  if (countEl) countEl.textContent = `(${completed}/${total})`;
+  if (percentageEl) percentageEl.textContent = `${percent}%`;
+  if (progressEl) {
+    progressEl.style.width = `${percent}%`;
+    const track = progressEl.closest('.checklist-progress-bar-track');
+    if (track) track.setAttribute('aria-valuenow', String(percent));
+  }
+
+  container.innerHTML = '';
+
+  if (total === 0) {
+    const emptyLi = document.createElement('li');
+    emptyLi.className = 'checklist-empty-state';
+    emptyLi.textContent = 'No hay subtareas añadidas. ¡Añade la primera abajo!';
+    container.appendChild(emptyLi);
+    return;
+  }
+
+  for (const item of checklist) {
+    const li = document.createElement('li');
+    li.className = 'checklist-item';
+    li.dataset.subtaskId = String(item.id);
+
+    li.innerHTML = `
+      <label class="checklist-item-label">
+        <input
+          type="checkbox"
+          class="checklist-item-checkbox"
+          data-subtask-id="${escapeHtml(String(item.id))}"
+          ${item.completed ? 'checked' : ''}
+          aria-label="Completar subtarea: ${escapeHtml(item.text)}"
+        />
+        <span class="checklist-item-text ${item.completed ? 'is-completed' : ''}">${escapeHtml(item.text)}</span>
+      </label>
+      <button
+        type="button"
+        class="btn-delete-subtask"
+        data-subtask-id="${escapeHtml(String(item.id))}"
+        aria-label="Eliminar subtarea: ${escapeHtml(item.text)}"
+        title="Eliminar subtarea"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    `;
+    container.appendChild(li);
+  }
+}
+
+/**
+ * Toggles a subtask completion status and persists with PATCH
+ * @param {string|number} taskId
+ * @param {string} subtaskId
+ */
+export async function toggleSubtask(taskId, subtaskId) {
+  const task = store.getTaskById(taskId);
+  if (!task || !Array.isArray(task.checklist)) return;
+
+  const previousChecklist = [...task.checklist];
+  const updatedChecklist = task.checklist.map((item) =>
+    String(item.id) === String(subtaskId)
+      ? { ...item, completed: !item.completed }
+      : item
+  );
+
+  // Optimistic update
+  store.updateTask(taskId, { checklist: updatedChecklist });
+  renderChecklist(taskId);
+  updateCardChecklistBadge(taskId, updatedChecklist);
+
+  try {
+    await api.updateTask(taskId, { checklist: updatedChecklist });
+  } catch (err) {
+    console.error('Error al actualizar subtarea en el servidor:', err);
+    store.updateTask(taskId, { checklist: previousChecklist });
+    renderChecklist(taskId);
+    updateCardChecklistBadge(taskId, previousChecklist);
+    showToast('Error al actualizar subtarea. Se restableció el estado.', 'error');
+  }
+}
+
+/**
+ * Adds a new subtask to task checklist and persists with PATCH
+ * @param {string|number} taskId
+ * @param {string} text
+ */
+export async function addSubtask(taskId, text) {
+  const cleanText = (text || '').trim();
+  if (!cleanText) return;
+
+  const task = store.getTaskById(taskId);
+  if (!task) return;
+
+  const currentChecklist = Array.isArray(task.checklist) ? [...task.checklist] : [];
+  const newItem = {
+    id: `chk_${Date.now()}`,
+    text: cleanText,
+    completed: false,
+  };
+  const updatedChecklist = [...currentChecklist, newItem];
+
+  // Optimistic update
+  store.updateTask(taskId, { checklist: updatedChecklist });
+  renderChecklist(taskId);
+  updateCardChecklistBadge(taskId, updatedChecklist);
+
+  const input = document.getElementById('input-new-subtask');
+  if (input) input.value = '';
+
+  try {
+    await api.updateTask(taskId, { checklist: updatedChecklist });
+    showToast('Subtarea añadida', 'success', 2000);
+  } catch (err) {
+    console.error('Error al añadir subtarea:', err);
+    store.updateTask(taskId, { checklist: currentChecklist });
+    renderChecklist(taskId);
+    updateCardChecklistBadge(taskId, currentChecklist);
+    showToast('Error al guardar subtarea en el servidor.', 'error');
+  }
+}
+
+/**
+ * Deletes a subtask from task checklist and persists with PATCH
+ * @param {string|number} taskId
+ * @param {string} subtaskId
+ */
+export async function deleteSubtask(taskId, subtaskId) {
+  const task = store.getTaskById(taskId);
+  if (!task || !Array.isArray(task.checklist)) return;
+
+  const previousChecklist = [...task.checklist];
+  const updatedChecklist = task.checklist.filter(
+    (item) => String(item.id) !== String(subtaskId)
+  );
+
+  // Optimistic update
+  store.updateTask(taskId, { checklist: updatedChecklist });
+  renderChecklist(taskId);
+  updateCardChecklistBadge(taskId, updatedChecklist);
+
+  try {
+    await api.updateTask(taskId, { checklist: updatedChecklist });
+    showToast('Subtarea eliminada', 'info', 2000);
+  } catch (err) {
+    console.error('Error al eliminar subtarea:', err);
+    store.updateTask(taskId, { checklist: previousChecklist });
+    renderChecklist(taskId);
+    updateCardChecklistBadge(taskId, previousChecklist);
+    showToast('Error al eliminar subtarea en el servidor.', 'error');
+  }
+}
+
+/**
  * Opens and populates the Task Detail modal dialog
  * @param {string|number} taskId - ID of the task to view
  */
@@ -325,6 +498,13 @@ export async function openTaskDetailModal(taskId) {
     } else {
       tagsChips.innerHTML = '<span class="detail-tags-empty">Sin etiquetas</span>';
     }
+  }
+
+  // Populate checklist
+  renderChecklist(taskId);
+  const newSubtaskInput = document.getElementById('input-new-subtask');
+  if (newSubtaskInput) {
+    newSubtaskInput.value = '';
   }
 
   // Reset add comment form
@@ -491,6 +671,57 @@ export function initTaskDetailModal() {
           saveBtn.disabled = false;
           saveBtn.textContent = 'Guardar Cambios';
         }
+      }
+    });
+  }
+
+  // Handle Checklist Interactions: toggle checkbox & delete subtask
+  const checklistContainer = document.getElementById('detail-checklist-items');
+  if (checklistContainer) {
+    checklistContainer.addEventListener('change', (e) => {
+      const checkbox = e.target.closest('.checklist-item-checkbox');
+      if (checkbox) {
+        const subtaskId = checkbox.dataset.subtaskId;
+        const taskId = idInput?.value || store.activeTaskId;
+        if (taskId && subtaskId) {
+          toggleSubtask(taskId, subtaskId);
+        }
+      }
+    });
+
+    checklistContainer.addEventListener('click', (e) => {
+      const deleteBtn = e.target.closest('.btn-delete-subtask');
+      if (deleteBtn) {
+        e.stopPropagation();
+        const subtaskId = deleteBtn.dataset.subtaskId;
+        const taskId = idInput?.value || store.activeTaskId;
+        if (taskId && subtaskId) {
+          deleteSubtask(taskId, subtaskId);
+        }
+      }
+    });
+  }
+
+  // Handle Add Subtask
+  const newSubtaskInput = document.getElementById('input-new-subtask');
+  const addSubtaskBtn = document.getElementById('btn-add-subtask');
+
+  const handleAddSubtask = () => {
+    const taskId = idInput?.value || store.activeTaskId;
+    if (taskId && newSubtaskInput) {
+      addSubtask(taskId, newSubtaskInput.value);
+    }
+  };
+
+  if (addSubtaskBtn) {
+    addSubtaskBtn.addEventListener('click', handleAddSubtask);
+  }
+
+  if (newSubtaskInput) {
+    newSubtaskInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleAddSubtask();
       }
     });
   }

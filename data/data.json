@@ -8,7 +8,12 @@
       "dueDate": "2026-09-15",
       "status": "todo",
       "createdAt": "2026-09-08T09:00:00Z",
-      "tags": ["#diseño", "#figma", "#ux"]
+      "tags": ["#diseño", "#figma", "#ux"],
+      "checklist": [
+        { "id": "chk_101", "text": "Wireframes de columnas", "completed": true },
+        { "id": "chk_102", "text": "Prototipo interactivo en Figma", "completed": false },
+        { "id": "chk_103", "text": "Exportar tokens de diseño", "completed": false }
+      ]
     },
     {
       "id": "2",
@@ -18,7 +23,12 @@
       "dueDate": "2026-09-10",
       "status": "doing",
       "createdAt": "2026-09-08T09:30:00Z",
-      "tags": ["#backend", "#api"]
+      "tags": ["#backend", "#api"],
+      "checklist": [
+        { "id": "chk_201", "text": "Instalar dependencias con pnpm", "completed": true },
+        { "id": "chk_202", "text": "Crear data.json inicial", "completed": true },
+        { "id": "chk_203", "text": "Probar endpoints con curl", "completed": false }
+      ]
     },
     {
       "id": "3",
@@ -28,7 +38,11 @@
       "dueDate": "2026-09-12",
       "status": "done",
       "createdAt": "2026-09-08T10:00:00Z",
-      "tags": ["#html", "#frontend"]
+      "tags": ["#html", "#frontend"],
+      "checklist": [
+        { "id": "chk_301", "text": "Markup semántico main, header, section", "completed": true },
+        { "id": "chk_302", "text": "Atributos ARIA y roles", "completed": true }
+      ]
     },
     {
       "id": "4",
@@ -38,7 +52,11 @@
       "dueDate": "2026-09-05",
       "status": "todo",
       "createdAt": "2026-09-08T10:15:00Z",
-      "tags": ["#accesibilidad", "#wcag"]
+      "tags": ["#accesibilidad", "#wcag"],
+      "checklist": [
+        { "id": "chk_401", "text": "Contraste de color mínimo 4.5:1", "completed": true },
+        { "id": "chk_402", "text": "Navegación completa por teclado (Tab, Enter, Space)", "completed": false }
+      ]
     }
   ],
   "comments": [
