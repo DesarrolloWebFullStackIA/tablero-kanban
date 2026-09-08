@@ -133,7 +133,7 @@ export function createCardElement(task, commentsCount = 0) {
   if (assignee) {
     const avatarUrl =
       assignee.avatar ||
-      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(assignee.name || 'User')}`;
+      `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(assignee.name || 'User')}`;
     assigneeHtml = `
       <span class="card-avatar" title="Asignado a: ${escapeHtml(assignee.name || 'Usuario')}">
         <img src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(assignee.name || 'Usuario')}" class="card-avatar-img" />
