@@ -920,15 +920,36 @@ a {
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
-  padding-bottom: var(--space-xs);
+  scroll-behavior: smooth;
+  scroll-padding-inline: clamp(1rem, 2.5vw, 2.5rem);
+  padding-bottom: var(--space-sm);
+  padding-right: clamp(1.5rem, 3vw, 3rem);
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
+.board-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.board-grid::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 0 clamp(1rem, 2.5vw, 2.5rem);
+}
+
+.board-grid::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+
+.board-grid::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-border-hover);
+}
+
 /* Kanban Column */
 .kanban-column {
-  flex: 0 0 clamp(300px, 22vw, 380px);
-  min-width: 280px;
+  flex: 0 0 clamp(290px, 21vw, 360px);
+  min-width: 270px;
   background-color: var(--color-bg-column);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -939,7 +960,7 @@ a {
   min-height: 0;
   max-height: 100%;
   box-shadow: var(--shadow-xs);
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .kanban-column:hover {
@@ -1154,6 +1175,7 @@ a {
   flex: 0 0 clamp(260px, 18vw, 320px);
   min-width: 260px;
   align-self: flex-start;
+  margin-right: clamp(1rem, 2vw, 2.5rem);
   background-color: var(--color-bg-column);
   border: 1.5px dashed var(--color-border);
   border-radius: var(--radius-lg);
