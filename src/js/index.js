@@ -5,9 +5,10 @@
 
 import api from './api.js';
 import store from './store.js';
-import { renderBoard, updateMetricsUI } from './ui.js';
+import { renderBoard, updateMetricsUI, updateColumnState, isTaskOverdue, formatDate } from './ui.js';
 import { showToast } from './utils.js';
 import { initCreateTaskModal, initTaskDeletion } from './modal.js';
+import { initDragAndDrop } from './dragdrop.js';
 
 /**
  * 1. Theme Management (Light / Dark mode)
@@ -173,8 +174,37 @@ export async function initApp() {
   initCreateTaskModal();
   initTaskDeletion();
 
+  // Initialize Drag and Drop between columns
+  initDragAndDrop((payload) => {
+    if (!payload || !payload.hasPositionChanged) return;
+    if (payload.isCrossColumn) {
+      store.moveTask(payload.taskId, payload.toStatus);
+    }
+  });
+
   // Reactive UI update whenever state changes
   store.subscribe(({ event, payload, state }) => {
+    if (event === 'TASK_MOVED' && payload) {
+      // Optimistic UI update: SortableJS has already placed card in target DOM list
+      updateMetricsUI(state.metrics);
+      updateColumnState(payload.oldStatus);
+      updateColumnState(payload.newStatus);
+
+      // Update overdue styling if status changed to/from 'done'
+      const cardEl = document.querySelector(`.kanban-card[data-id="${payload.task.id}"]`);
+      if (cardEl) {
+        const dueDateBadge = cardEl.querySelector('.card-due-date');
+        if (dueDateBadge) {
+          const overdue = isTaskOverdue(payload.task.dueDate, payload.newStatus);
+          dueDateBadge.classList.toggle('is-overdue', overdue);
+          dueDateBadge.title = overdue
+            ? 'Tarea vencida'
+            : 'Fecha de entrega: ' + formatDate(payload.task.dueDate);
+        }
+      }
+      return;
+    }
+
     const filteredTasks = store.getFilteredTasks();
     renderBoard(filteredTasks, (taskId) => store.getCommentsForTask(taskId).length);
     updateMetricsUI(state.metrics);
