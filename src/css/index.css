@@ -239,9 +239,12 @@ body {
   color: var(--color-text-main);
   background-color: var(--color-bg-app);
   min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color var(--transition-normal), color var(--transition-normal);
@@ -383,9 +386,10 @@ a {
 }
 
 .header-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: var(--space-sm) var(--space-md);
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-sm) clamp(1rem, 2.5vw, 2.5rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -671,8 +675,23 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   Media Queries: Mobile Breakpoint Adaptations
+   Media Queries: Tablet & Mobile Breakpoint Adaptations
    -------------------------------------------------------------------------- */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .header-container {
+    gap: var(--space-sm);
+  }
+
+  .metrics-dashboard .metric-pill {
+    padding: 0.15rem 0.45rem;
+    font-size: 0.7rem;
+  }
+
+  .toolbar {
+    gap: var(--space-sm);
+  }
+}
+
 @media (max-width: 768px) {
   .hamburger-btn {
     display: flex;
@@ -697,10 +716,11 @@ a {
    7. Toolbar, Search & Filter Controls
    -------------------------------------------------------------------------- */
 .toolbar-wrapper {
-  max-width: 1400px;
+  max-width: 100%;
   width: 100%;
-  margin: var(--space-md) auto 0;
-  padding: 0 var(--space-md);
+  margin: var(--space-sm) 0 0;
+  padding: 0 clamp(1rem, 2.5vw, 2.5rem);
+  flex-shrink: 0;
 }
 
 .toolbar {
@@ -713,13 +733,14 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
+  flex-wrap: wrap;
   transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 
 /* Search Box */
 .search-box {
-  flex: 1;
-  max-width: 420px;
+  flex: 1 1 240px;
+  max-width: 460px;
 }
 
 .search-input-wrapper {
@@ -793,7 +814,8 @@ a {
 .filter-controls {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  flex-wrap: wrap;
   flex-shrink: 0;
 }
 
@@ -893,40 +915,69 @@ a {
    8. Kanban Board, Columns & Dropzones Layout
    -------------------------------------------------------------------------- */
 .board-container {
-  max-width: 1400px;
+  max-width: 100%;
   width: 100%;
-  margin: var(--space-md) auto;
-  padding: 0 var(--space-md) var(--space-xl);
+  margin: var(--space-sm) 0 0;
+  padding: 0 clamp(1rem, 2.5vw, 2.5rem) var(--space-sm);
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .board-grid {
   display: flex;
   gap: var(--space-md);
-  align-items: flex-start;
+  align-items: stretch;
   width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scroll-padding-inline: clamp(1rem, 2.5vw, 2.5rem);
   padding-bottom: var(--space-sm);
+  padding-right: clamp(1.5rem, 3vw, 3rem);
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
+.board-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.board-grid::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 0 clamp(1rem, 2.5vw, 2.5rem);
+}
+
+.board-grid::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: var(--radius-full);
+}
+
+.board-grid::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-border-hover);
+}
+
 /* Kanban Column */
 .kanban-column {
-  flex: 1 0 300px;
-  min-width: 280px;
+  flex: 0 0 clamp(290px, 21vw, 360px);
+  min-width: 270px;
   background-color: var(--color-bg-column);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  min-height: 480px;
-  max-height: calc(100vh - 190px);
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
   box-shadow: var(--shadow-xs);
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .kanban-column:hover {
@@ -1138,8 +1189,10 @@ a {
 
 /* Add Column Action Card / Form */
 .add-column-wrapper {
-  flex: 0 0 280px;
+  flex: 0 0 clamp(260px, 18vw, 320px);
   min-width: 260px;
+  align-self: flex-start;
+  margin-right: clamp(1rem, 2vw, 2.5rem);
   background-color: var(--color-bg-column);
   border: 1.5px dashed var(--color-border);
   border-radius: var(--radius-lg);
@@ -1212,29 +1265,51 @@ a {
 }
 
 @media (max-width: 768px) {
+  .board-container {
+    padding: 0 var(--space-sm) var(--space-xs);
+  }
+
   .board-grid {
     display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-    overflow-x: visible;
+    flex-direction: row;
+    align-items: stretch;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-inline: var(--space-sm);
+    gap: var(--space-sm);
+    padding-bottom: var(--space-xs);
+    padding-right: var(--space-md);
   }
 
   .kanban-column {
-    flex: 1 1 auto;
-    width: 100%;
-    min-width: 0;
-    max-height: none;
-    min-height: auto;
+    flex: 0 0 86vw;
+    width: 86vw;
+    max-width: 360px;
+    min-width: 270px;
+    scroll-snap-align: center;
+    scroll-snap-stop: normal;
+    height: 100%;
+    max-height: 100%;
+    padding: var(--space-sm);
   }
 
   .add-column-wrapper {
-    flex: 1 1 auto;
-    width: 100%;
-    min-width: 0;
+    flex: 0 0 80vw;
+    width: 80vw;
+    max-width: 320px;
+    min-width: 250px;
+    scroll-snap-align: center;
+    align-self: flex-start;
+    margin-right: var(--space-md);
   }
 
   .kanban-cards-list {
-    max-height: 450px;
+    flex: 1;
+    min-height: 120px;
+    max-height: none;
+    overflow-y: auto;
   }
 }
 
@@ -1564,8 +1639,9 @@ a {
   color: var(--color-text-main);
   box-shadow: var(--shadow-xl);
   max-width: 520px;
-  width: 92vw;
-  max-height: 88vh;
+  width: min(92vw, 520px);
+  max-height: 90vh;
+  max-height: 90dvh;
   margin: auto;
   padding: 0;
   overflow: hidden;
@@ -1575,7 +1651,8 @@ a {
 }
 
 .app-dialog--wide {
-  max-width: 680px;
+  max-width: 720px;
+  width: min(94vw, 720px);
 }
 
 /* Native dialog backdrop */
@@ -2296,6 +2373,67 @@ a {
 
   .form-row {
     flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .kanban-column {
+    flex: 0 0 88vw;
+    width: 88vw;
+    min-width: 260px;
+  }
+
+  .add-column-wrapper {
+    flex: 0 0 82vw;
+    width: 82vw;
+    min-width: 240px;
+  }
+
+  .app-dialog {
+    width: 96vw;
+    max-width: 96vw;
+    max-height: 94vh;
+    max-height: 94dvh;
+    border-radius: var(--radius-md);
+  }
+
+  .app-dialog--wide,
+  .app-dialog--users {
+    width: 96vw;
+    max-width: 96vw;
+  }
+
+  .dialog-header {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .dialog-form,
+  .dialog-body {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .dialog-footer {
+    padding: var(--space-sm) var(--space-md);
+    flex-direction: column-reverse;
+    gap: var(--space-xs);
+  }
+
+  .dialog-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .detail-actions-bar {
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  .detail-actions-bar .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .users-list {
+    grid-template-columns: 1fr;
   }
 }
 
