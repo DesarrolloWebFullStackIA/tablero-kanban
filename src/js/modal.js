@@ -6,6 +6,7 @@
 import api from './api.js';
 import store from './store.js';
 import { showToast } from './utils.js';
+import { formatDate, isTaskOverdue, renderComments } from './ui.js';
 
 /**
  * Initializes the Create Task modal dialog and form handlers
@@ -240,4 +241,327 @@ export function initTaskDeletion() {
     });
   }
 }
+
+/**
+ * Maps task status key to human-readable Spanish label
+ * @param {string} status - 'todo' | 'doing' | 'done'
+ * @returns {string}
+ */
+export function getStatusLabel(status) {
+  switch (status) {
+    case 'todo':
+      return 'Por Hacer';
+    case 'doing':
+      return 'En Proceso';
+    case 'done':
+      return 'Finalizado';
+    default:
+      return status || 'Por Hacer';
+  }
+}
+
+/**
+ * Opens and populates the Task Detail modal dialog
+ * @param {string|number} taskId - ID of the task to view
+ */
+export async function openTaskDetailModal(taskId) {
+  const dialog = document.getElementById('task-detail-dialog');
+  const task = store.getTaskById(taskId);
+  if (!dialog || !task) return;
+
+  store.setActiveTaskId(taskId);
+
+  // Populate header badges
+  const priorityBadge = document.getElementById('detail-priority-badge');
+  const statusBadge = document.getElementById('detail-status-badge');
+  const dateBadge = document.getElementById('detail-date-badge');
+  const dueDateText = document.getElementById('detail-due-date-text');
+
+  if (priorityBadge) {
+    priorityBadge.textContent = task.priority || 'Media';
+    priorityBadge.className = `badge-priority badge-priority--${task.priority || 'Media'}`;
+  }
+
+  if (statusBadge) {
+    statusBadge.textContent = getStatusLabel(task.status);
+    statusBadge.className = `badge-status badge-status--${task.status}`;
+  }
+
+  const overdue = isTaskOverdue(task.dueDate, task.status);
+  if (dueDateText) {
+    dueDateText.textContent = formatDate(task.dueDate);
+  }
+  if (dateBadge) {
+    dateBadge.classList.toggle('is-overdue', overdue);
+    dateBadge.title = overdue ? 'Tarea vencida' : 'Fecha límite: ' + formatDate(task.dueDate);
+  }
+
+  // Populate editable fields
+  const idInput = document.getElementById('detail-task-id');
+  const titleInput = document.getElementById('detail-task-title-input');
+  const descInput = document.getElementById('detail-task-desc-input');
+
+  if (idInput) idInput.value = String(task.id);
+  if (titleInput) titleInput.value = task.title || '';
+  if (descInput) descInput.value = task.description || '';
+
+  // Reset add comment form
+  const addCommentForm = document.getElementById('form-add-comment');
+  if (addCommentForm) {
+    addCommentForm.reset();
+  }
+
+  // Comments feed setup
+  const commentsList = document.getElementById('detail-comments-list');
+  const commentsCount = document.getElementById('detail-comments-count');
+
+  // Render cached comments immediately
+  const cachedComments = store.getCommentsForTask(taskId);
+  renderComments(commentsList, cachedComments, commentsCount);
+
+  dialog.showModal();
+
+  // Fetch fresh comments from server
+  try {
+    if (commentsList) {
+      commentsList.setAttribute('aria-busy', 'true');
+    }
+    const comments = await api.getCommentsByTaskId(taskId);
+    store.setCommentsForTask(taskId, comments);
+
+    // If dialog is still showing this task, update rendered comments
+    if (String(store.activeTaskId) === String(taskId)) {
+      renderComments(commentsList, comments, commentsCount);
+    }
+  } catch (err) {
+    console.error('Error al cargar comentarios:', err);
+    showToast('Error al cargar comentarios de la tarea.', 'error');
+  } finally {
+    if (commentsList) {
+      commentsList.setAttribute('aria-busy', 'false');
+    }
+  }
+}
+
+/**
+ * Initializes the Task Detail modal dialog and card click handlers
+ */
+export function initTaskDetailModal() {
+  const dialog = document.getElementById('task-detail-dialog');
+  const closeBtn = document.getElementById('btn-close-detail-dialog');
+
+  if (!dialog) return;
+
+  const closeModal = () => {
+    dialog.close();
+    store.setActiveTaskId(null);
+  };
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeModal);
+  }
+
+  // Close when clicking modal backdrop
+  dialog.addEventListener('click', (e) => {
+    const rect = dialog.getBoundingClientRect();
+    const isInDialog =
+      rect.top <= e.clientY &&
+      e.clientY <= rect.top + rect.height &&
+      rect.left <= e.clientX &&
+      e.clientX <= rect.left + rect.width;
+
+    if (!isInDialog) {
+      closeModal();
+    }
+  });
+
+  // Listen to card clicks on the board container using event delegation
+  const boardContainer = document.getElementById('board-container');
+  if (boardContainer) {
+    boardContainer.addEventListener('click', (e) => {
+      // Ignore click on quick delete button
+      if (e.target.closest('.btn-card-delete')) return;
+
+      const card = e.target.closest('.kanban-card');
+      if (card && card.dataset.id) {
+        openTaskDetailModal(card.dataset.id);
+      }
+    });
+
+    // Keyboard accessibility: Enter or Space on focused card
+    boardContainer.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        if (e.target.closest('.btn-card-delete')) return;
+        const card = e.target.closest('.kanban-card');
+        if (card && card.dataset.id) {
+          e.preventDefault();
+          openTaskDetailModal(card.dataset.id);
+        }
+      }
+    });
+  }
+
+  // Handle Edit Task Form Submission
+  const editForm = document.getElementById('form-edit-task');
+  const idInput = document.getElementById('detail-task-id');
+  const titleInput = document.getElementById('detail-task-title-input');
+  const descInput = document.getElementById('detail-task-desc-input');
+  const saveBtn = document.getElementById('btn-save-task-edits');
+
+  if (editForm) {
+    editForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const taskId = idInput?.value;
+      if (!taskId) return;
+
+      const newTitle = (titleInput?.value || '').trim();
+      const newDesc = (descInput?.value || '').trim();
+
+      if (!newTitle || newTitle.length < 3) {
+        showToast('El título debe tener al menos 3 caracteres.', 'error');
+        titleInput?.focus();
+        return;
+      }
+
+      try {
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.textContent = 'Guardando...';
+        }
+
+        const updatedTask = await api.updateTask(taskId, {
+          title: newTitle,
+          description: newDesc,
+        });
+
+        // Update central reactive store
+        store.updateTask(taskId, {
+          title: updatedTask.title || newTitle,
+          description: updatedTask.description ?? newDesc,
+        });
+
+        showToast('Cambios guardados correctamente', 'success');
+      } catch (err) {
+        console.error('Error al guardar cambios de la tarea:', err);
+        showToast('Error al guardar cambios. Verifica la conexión con el servidor.', 'error', 5000);
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Guardar Cambios';
+        }
+      }
+    });
+  }
+
+  // Handle Add Comment Form Submission
+  const addCommentForm = document.getElementById('form-add-comment');
+  const commentAuthorInput = document.getElementById('comment-author');
+  const commentTextInput = document.getElementById('comment-text');
+  const commentSubmitBtn = document.getElementById('btn-submit-comment');
+
+  if (addCommentForm) {
+    addCommentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const taskId = idInput?.value || store.activeTaskId;
+      if (!taskId) return;
+
+      const author = (commentAuthorInput?.value || '').trim();
+      const text = (commentTextInput?.value || '').trim();
+
+      if (!author) {
+        showToast('Por favor, ingresa tu nombre.', 'error');
+        commentAuthorInput?.focus();
+        return;
+      }
+
+      if (!text || text.length < 2) {
+        showToast('El comentario debe tener al menos 2 caracteres.', 'error');
+        commentTextInput?.focus();
+        return;
+      }
+
+      try {
+        if (commentSubmitBtn) {
+          commentSubmitBtn.disabled = true;
+          commentSubmitBtn.textContent = 'Añadiendo...';
+        }
+
+        const newComment = await api.createComment({
+          taskId: String(taskId),
+          author,
+          text,
+        });
+
+        // Store update (emits COMMENT_ADDED, updating the board card comments badge)
+        store.addComment(newComment);
+
+        // Update modal comments list & count
+        const commentsList = document.getElementById('detail-comments-list');
+        const commentsCount = document.getElementById('detail-comments-count');
+        const taskComments = store.getCommentsForTask(taskId);
+        renderComments(commentsList, taskComments, commentsCount);
+
+        // Smooth scroll to bottom of comments list
+        if (commentsList) {
+          commentsList.scrollTop = commentsList.scrollHeight;
+        }
+
+        // Reset comment text field and keep author for convenience
+        if (commentTextInput) {
+          commentTextInput.value = '';
+          commentTextInput.focus();
+        }
+
+        showToast('Comentario añadido correctamente', 'success');
+      } catch (err) {
+        console.error('Error al añadir comentario:', err);
+        showToast('Error al añadir comentario. Verifica la conexión con el servidor.', 'error', 5000);
+      } finally {
+        if (commentSubmitBtn) {
+          commentSubmitBtn.disabled = false;
+          commentSubmitBtn.textContent = 'Añadir Comentario';
+        }
+      }
+    });
+  }
+
+  // Handle Comment Deletion
+  const commentsListContainer = document.getElementById('detail-comments-list');
+  if (commentsListContainer) {
+    commentsListContainer.addEventListener('click', async (e) => {
+      const deleteBtn = e.target.closest('.btn-comment-delete');
+      if (!deleteBtn) return;
+
+      e.stopPropagation();
+      const commentId = deleteBtn.dataset.commentId;
+      const taskId = idInput?.value || store.activeTaskId;
+      if (!commentId || !taskId) return;
+
+      const confirmed = window.confirm('¿Deseas eliminar este comentario permanentemente?');
+      if (!confirmed) return;
+
+      try {
+        deleteBtn.disabled = true;
+        await api.deleteComment(commentId);
+
+        // Remove from state store (emits COMMENT_REMOVED, updating the board card badge)
+        store.removeComment(commentId, taskId);
+
+        // Re-render comments list and count in modal
+        const taskComments = store.getCommentsForTask(taskId);
+        const commentsCount = document.getElementById('detail-comments-count');
+        renderComments(commentsListContainer, taskComments, commentsCount);
+
+        showToast('Comentario eliminado', 'info');
+      } catch (err) {
+        console.error('Error al eliminar comentario:', err);
+        showToast('Error al eliminar comentario. Verifica la conexión con el servidor.', 'error', 5000);
+        deleteBtn.disabled = false;
+      }
+    });
+  }
+}
+
 
