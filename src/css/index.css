@@ -675,8 +675,23 @@ a {
 }
 
 /* --------------------------------------------------------------------------
-   Media Queries: Mobile Breakpoint Adaptations
+   Media Queries: Tablet & Mobile Breakpoint Adaptations
    -------------------------------------------------------------------------- */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .header-container {
+    gap: var(--space-sm);
+  }
+
+  .metrics-dashboard .metric-pill {
+    padding: 0.15rem 0.45rem;
+    font-size: 0.7rem;
+  }
+
+  .toolbar {
+    gap: var(--space-sm);
+  }
+}
+
 @media (max-width: 768px) {
   .hamburger-btn {
     display: flex;
@@ -718,13 +733,14 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
+  flex-wrap: wrap;
   transition: background-color var(--transition-normal), border-color var(--transition-normal);
 }
 
 /* Search Box */
 .search-box {
-  flex: 1;
-  max-width: 420px;
+  flex: 1 1 240px;
+  max-width: 460px;
 }
 
 .search-input-wrapper {
@@ -798,7 +814,8 @@ a {
 .filter-controls {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: var(--space-sm);
+  flex-wrap: wrap;
   flex-shrink: 0;
 }
 
@@ -1600,8 +1617,9 @@ a {
   color: var(--color-text-main);
   box-shadow: var(--shadow-xl);
   max-width: 520px;
-  width: 92vw;
-  max-height: 88vh;
+  width: min(92vw, 520px);
+  max-height: 90vh;
+  max-height: 90dvh;
   margin: auto;
   padding: 0;
   overflow: hidden;
@@ -1611,7 +1629,8 @@ a {
 }
 
 .app-dialog--wide {
-  max-width: 680px;
+  max-width: 720px;
+  width: min(94vw, 720px);
 }
 
 /* Native dialog backdrop */
