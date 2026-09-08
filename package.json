@@ -1,9 +1,10 @@
 {
   "name": "tablero-kanban",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
+    "server": "json-server ./data/data.json --port 3000",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

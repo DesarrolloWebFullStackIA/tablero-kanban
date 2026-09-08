@@ -1,0 +1,63 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "title": "Diseñar maqueta en Figma",
+      "description": "Crear los wireframes y prototipos interactivos del tablero.",
+      "priority": "Alta",
+      "dueDate": "2026-09-15",
+      "status": "todo",
+      "createdAt": "2026-09-08T09:00:00Z"
+    },
+    {
+      "id": "2",
+      "title": "Configurar json-server",
+      "description": "Iniciar la API simulada con las colecciones de tareas y comentarios.",
+      "priority": "Media",
+      "dueDate": "2026-09-10",
+      "status": "doing",
+      "createdAt": "2026-09-08T09:30:00Z"
+    },
+    {
+      "id": "3",
+      "title": "Estructurar HTML semántico",
+      "description": "Definir las columnas principales y la cabecera del tablero con accesibilidad.",
+      "priority": "Baja",
+      "dueDate": "2026-09-12",
+      "status": "done",
+      "createdAt": "2026-09-08T10:00:00Z"
+    },
+    {
+      "id": "4",
+      "title": "Auditoría de accesibilidad WCAG AA",
+      "description": "Verificar contrastes de color, navegación por teclado y lectores de pantalla.",
+      "priority": "Alta",
+      "dueDate": "2026-09-05",
+      "status": "todo",
+      "createdAt": "2026-09-08T10:15:00Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": "101",
+      "taskId": "1",
+      "author": "Ana Gómez",
+      "text": "Recuerda incluir los estados de hover en los botones del modal.",
+      "createdAt": "2026-09-06T10:30:00Z"
+    },
+    {
+      "id": "102",
+      "taskId": "1",
+      "author": "Carlos Ruiz",
+      "text": "Ya subí la paleta de colores al canal de Figma.",
+      "createdAt": "2026-09-06T11:15:00Z"
+    },
+    {
+      "id": "103",
+      "taskId": "2",
+      "author": "Laura Martínez",
+      "text": "El script start-backend.bat funciona correctamente en el puerto 3000.",
+      "createdAt": "2026-09-07T14:20:00Z"
+    }
+  ]
+}
