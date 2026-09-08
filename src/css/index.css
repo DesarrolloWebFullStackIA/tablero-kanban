@@ -239,9 +239,12 @@ body {
   color: var(--color-text-main);
   background-color: var(--color-bg-app);
   min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color var(--transition-normal), color var(--transition-normal);
@@ -383,9 +386,10 @@ a {
 }
 
 .header-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: var(--space-sm) var(--space-md);
+  max-width: 100%;
+  width: 100%;
+  margin: 0;
+  padding: var(--space-sm) clamp(1rem, 2.5vw, 2.5rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -697,10 +701,11 @@ a {
    7. Toolbar, Search & Filter Controls
    -------------------------------------------------------------------------- */
 .toolbar-wrapper {
-  max-width: 1400px;
+  max-width: 100%;
   width: 100%;
-  margin: var(--space-md) auto 0;
-  padding: 0 var(--space-md);
+  margin: var(--space-sm) 0 0;
+  padding: 0 clamp(1rem, 2.5vw, 2.5rem);
+  flex-shrink: 0;
 }
 
 .toolbar {
@@ -893,29 +898,36 @@ a {
    8. Kanban Board, Columns & Dropzones Layout
    -------------------------------------------------------------------------- */
 .board-container {
-  max-width: 1400px;
+  max-width: 100%;
   width: 100%;
-  margin: var(--space-md) auto;
-  padding: 0 var(--space-md) var(--space-xl);
+  margin: var(--space-sm) 0 0;
+  padding: 0 clamp(1rem, 2.5vw, 2.5rem) var(--space-sm);
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .board-grid {
   display: flex;
   gap: var(--space-md);
-  align-items: flex-start;
+  align-items: stretch;
   width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow-x: auto;
-  padding-bottom: var(--space-sm);
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  padding-bottom: var(--space-xs);
   scrollbar-width: thin;
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
 /* Kanban Column */
 .kanban-column {
-  flex: 1 0 300px;
+  flex: 0 0 clamp(300px, 22vw, 380px);
   min-width: 280px;
   background-color: var(--color-bg-column);
   border: 1px solid var(--color-border);
@@ -923,8 +935,9 @@ a {
   padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  min-height: 480px;
-  max-height: calc(100vh - 190px);
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
   box-shadow: var(--shadow-xs);
   transition: all var(--transition-fast);
 }
@@ -1138,8 +1151,9 @@ a {
 
 /* Add Column Action Card / Form */
 .add-column-wrapper {
-  flex: 0 0 280px;
+  flex: 0 0 clamp(260px, 18vw, 320px);
   min-width: 260px;
+  align-self: flex-start;
   background-color: var(--color-bg-column);
   border: 1.5px dashed var(--color-border);
   border-radius: var(--radius-lg);
