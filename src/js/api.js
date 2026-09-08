@@ -208,7 +208,7 @@ export async function createUser(userData) {
     ...userData,
     avatar:
       userData.avatar ||
-      `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userData.name || 'User')}`,
+      `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${encodeURIComponent(userData.name || 'User')}`,
   };
   return await request('/users', {
     method: 'POST',

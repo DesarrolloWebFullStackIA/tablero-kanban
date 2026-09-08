@@ -92,21 +92,21 @@
       "name": "Ana Gómez",
       "email": "ana.gomez@example.com",
       "role": "Frontend Dev",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Ana"
+      "avatar": "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Ana"
     },
     {
       "id": "u2",
       "name": "Carlos Ruiz",
       "email": "carlos.ruiz@example.com",
       "role": "Backend Dev",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Carlos"
+      "avatar": "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Carlos"
     },
     {
       "id": "u3",
       "name": "Laura Méndez",
       "email": "laura.mendez@example.com",
       "role": "UX/UI Designer",
-      "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=Laura"
+      "avatar": "https://api.dicebear.com/7.x/bottts-neutral/svg?seed=Laura"
     }
   ]
 }
