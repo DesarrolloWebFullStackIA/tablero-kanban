@@ -1,6 +1,6 @@
 # Tablero Kanban | Trello-style Project & Task Manager
 
-[![Semantic Versioning](https://img.shields.io/badge/version-v10.1.0-blue.svg)](https://semver.org)
+[![Semantic Versioning](https://img.shields.io/badge/version-v10.2.0-blue.svg)](https://semver.org)
 [![Vitest Unit Tests](https://img.shields.io/badge/vitest-79%2F79%20passing-brightgreen.svg)](https://vitest.dev)
 [![Live Demo](https://img.shields.io/badge/demo-GitHub%20Pages-success.svg)](https://desarrollowebfullstackia.github.io/tablero-kanban/)
 [![GitHub Wiki](https://img.shields.io/badge/wiki-GitHub%20Wiki-blueviolet.svg)](https://github.com/DesarrolloWebFullStackIA/tablero-kanban/wiki)
@@ -84,8 +84,8 @@ tablero-kanban/
 │   ├── 03-Data-Model-and-API.md
 │   ├── 04-UI-UX-Design-System.md
 │   ├── 05-Task-Roadmap.md
-│   ├── 06-GitFlow-and-Versioning.md
-│   └── 07-UI-UX-Stitch-Prompt-and-Prototypes.md
+│   └── 06-GitFlow-and-Versioning.md
+├── start-project.bat              # One-click Windows startup script (Backend + Frontend + Browser)
 ├── index.html                     # Semantic HTML5 single-page application entry point
 ├── package.json                   # Project scripts, metadata, and dependencies
 └── README.md                      # Project documentation
@@ -95,11 +95,29 @@ tablero-kanban/
 
 ## 🚀 Getting Started
 
-### Prerequisites
+### ⚡ Quick Start (1-Click Launch for Windows)
+
+The repository includes a convenient Windows batch launcher [`start-project.bat`](start-project.bat) that boots the entire project in a single click:
+
+1. Double-click **`start-project.bat`** (or run `./start-project.bat` in your terminal).
+2. The script will automatically:
+   - Launch the **Backend REST API** (`json-server`) on port `3000` (`http://localhost:3000`).
+   - Launch the **Local Frontend Server** (`serve`) on port `5000` (`http://localhost:5000`).
+   - Automatically open the application in your default browser at **`http://localhost:5000`**.
+3. To stop all running services, simply close the two command prompt windows.
+
+> [!NOTE]
+> Make sure to install dependencies (`pnpm install` or `npm install`) once before executing the launcher.
+
+---
+
+### 🛠️ Manual Step-by-Step Setup
+
+#### Prerequisites
 - **Node.js** v18.0.0 or higher
 - **pnpm** (recommended) or **npm**
 
-### 1. Installation
+#### 1. Installation
 Clone the repository and install dependencies:
 ```bash
 git clone https://github.com/DesarrolloWebFullStackIA/tablero-kanban.git
@@ -108,7 +126,7 @@ pnpm install
 # or: npm install
 ```
 
-### 2. Start the Simulated REST Backend
+#### 2. Start the Simulated REST Backend
 Launch `json-server` on port `3000`:
 ```bash
 pnpm server
@@ -116,7 +134,7 @@ pnpm server
 ```
 The REST API will be accessible at `http://localhost:3000`.
 
-### 3. Launch the Frontend
+#### 3. Launch the Frontend
 Open `index.html` in your browser using any local static file server:
 ```bash
 # Using VS Code Live Server extension (recommended):
